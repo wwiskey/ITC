@@ -34,7 +34,7 @@
 
 ### 과거 실행 영상 · 약 2분 27초
 
-https://github.com/user-attachments/assets/10cf0ff7-8f36-4eec-8a77-fc38f0d12f35
+https://github.com/user-attachments/assets/21cbbe05-7d5e-4026-a2f9-14a76fd9fff7
 
 <sub>서비스가 동작하던 당시의 기록입니다. 현재 운영 상태를 보여주는 영상은 아니며, 공개용 사본에서는 브라우저 주소창·개인 이메일 표시 구간·원본 메타데이터를 제거했습니다.</sub>
 
