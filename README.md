@@ -11,11 +11,15 @@
 
 **2025.08–09 · 6인 팀 프로젝트 · PM & Data Engineer**
 
-[서비스 화면](#서비스-화면) · [주요 기능](#주요-기능) · [시스템 구성](#시스템-구성) · [담당 역할](#담당-역할) · [실행 안내](#실행-안내)
+[서비스 화면](#서비스-화면) · [주요 기능](#주요-기능) · [시스템 구성](#시스템-구성) · [담당 역할](#담당-역할) · [현재 상태·재사용](#현재-상태와-재사용)
 
 </div>
 
 ---
+
+> **현재 서비스 운영 종료 · 소스 보관 상태**<br />
+> 기존 외부 리소스(DB·인증·AI·클라우드·분석 환경)는 삭제되어 **현재 전체 서비스를 실행할 수 없습니다.**<br />
+> 아래는 프로젝트 당시 구현 내용입니다. 지금 확인할 수 있는 화면과 향후 재구축 절차는 [재사용·재구축 가이드](docs/RECOVERY_GUIDE.md)에 정리했습니다.
 
 ## 프로젝트 소개
 
@@ -80,6 +84,8 @@
 - 리포트 데이터를 읽는 **AI 질의응답**과 브라우저 인쇄·PDF 저장
 
 ## 시스템 구성
+
+프로젝트 당시의 연결 구조입니다. 현재 해당 외부 환경은 운영되지 않습니다.
 
 ```mermaid
 flowchart LR
@@ -159,49 +165,36 @@ flowchart LR
 
 </details>
 
-## 실행 안내
+## 현재 상태와 재사용
 
-이 저장소는 팀 프로젝트의 공개 소스 스냅샷입니다. **DB 스키마·가격 데이터·인증 및 외부 API 설정을 별도로 준비해야 합니다.**
+기존 프로젝트 리소스는 삭제되었고, 이 저장소에는 **소스·정적 화면·일부 콘텐츠**가 남아 있습니다. DB 스키마·과거 가격 데이터·인증 설정 백업 등이 없어 `npm ci`와 환경변수 설정만으로 원래 서비스를 복원할 수 없습니다. Docker 역시 웹 서버만 포함합니다.
 
-### 1. 소스와 의존성 준비
-
-Node.js **20** 환경을 기준으로 합니다.
-
-```bash
-git clone https://github.com/wwiskey/ITC.git
-cd ITC
-npm ci
-cp .env.example .env
-```
-
-### 2. 외부 서비스 설정
-
-[`.env.example`](.env.example)을 참고해 사용하는 서비스의 값을 `.env`에 입력합니다.
-
-| 설정 | 준비할 내용 |
+| 지금 하려는 일 | 가능 여부와 방법 |
 | :--- | :--- |
-| `DB_*` · `TRADING_DB_NAME` · `QNA_DB_NAME` · `KEYCLOAK_DB_NAME` | 사용자·거래·질문·인증 데이터베이스와 스키마 |
-| `KEYCLOAK_*` · `SESSION_SECRET` | 로그인 환경과 충분히 긴 임의 세션 키 |
-| `AZURE_MYSQL_*` | 뉴스 API가 읽을 MySQL 데이터베이스 |
-| `LLM_API_ENDPOINT` · `LLM_API_KEY` | 대화형 AI 도우미 API |
-| `SMTP_*` · `PUBLIC_BASE_URL` | 확인 메일과 본인 서비스의 기본 URL |
+| 화면·기획·코드 살펴보기 | README와 캡처, 로컬 정적 화면으로 확인 가능 |
+| 모의투자·리포트 실행하기 | DB·인증·데이터부터 재구축 필요 |
+| 뉴스·AI·메일 이용하기 | 새 외부 서비스와 API 설정·연동 필요 |
+| 전체 서비스·운영 분석 재개하기 | 배포 및 Fabric·Power BI 환경까지 별도 재구축 필요 |
+
+### 정적 화면만 살펴보기
+
+저장소 루트에서 Python 3로 실행합니다.
 
 ```bash
-npm start
+python3 -m http.server 8080 --bind 127.0.0.1 --directory public
 ```
 
-기본 포트는 `3000`입니다. 환경과 데이터를 준비한 뒤 [localhost:3000](http://localhost:3000)에서 확인합니다.
+[홈](http://127.0.0.1:8080/index.html) · [시나리오 선택](http://127.0.0.1:8080/historical.html) · [백과사전](http://127.0.0.1:8080/crypto.html)
 
-<details>
-<summary><strong>Python 뉴스 수집과 배포 설정</strong></summary>
+화면 구조와 콘텐츠를 보는 방법입니다. 로그인·거래·뉴스 API·AI·개인 리포트는 연결되지 않으며, 일부 라이브러리는 인터넷이 필요합니다.
 
-- 뉴스 수집은 웹 서버와 별도로 실행하는 Azure Functions 코드입니다.
-- `azure-functions`, `requests`, `mysql-connector-python`, `openai` 등 Python 의존성과 Functions 프로젝트 구성을 준비해야 합니다. 현재 저장소에는 `requirements.txt`와 `host.json`이 없습니다.
-- `NAVER_*` · `AZURE_OPENAI_*`를 설정하고, Python의 `DB_*`와 웹 서버의 `AZURE_MYSQL_*`가 같은 뉴스 DB를 바라보도록 맞춥니다.
-- Azure Key Vault 모듈을 사용할 때는 `AZURE_KEY_VAULT_NAME`, Azure 자격 증명, 해당 SDK 의존성을 별도로 준비합니다.
-- 컨테이너·클라우드 배포는 [Azure 배포 설정 안내](docs/AZURE_DEPLOYMENT.md)를 참고하세요. 파이프라인의 리소스명은 예시값이며 자동 실행은 꺼져 있습니다.
+### 나중에 다시 사용하려면
 
-</details>
+**정적 화면 확인 → 테스트 DB·인증 재구성 → 모의 주문·리포트 검증 → 필요한 뉴스·AI 연결 → 배포** 순서로 진행합니다.
+
+[**재사용·재구축 가이드 보기 →**](docs/RECOVERY_GUIDE.md)
+
+필요한 리소스 목록, DB 재작성 대상, 원본 데이터 없이 복구할 수 없는 범위, 단계별 완료 기준과 코드 수정 사항을 정리했습니다. 샘플 데이터 기반 데모 모드는 향후 구현할 선택지이며, 현재 제공되는 기능은 아닙니다.
 
 <details>
 <summary><strong>현재 소스의 범위와 확인 사항</strong></summary>
