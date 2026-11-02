@@ -1,0 +1,2156 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>과거 데이터 모의투자</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #212121;
+      --panel: #161616;
+      --panel-2: #1f1f1f;
+      --line: #424242;
+      --hairline: #5e5e5e;
+      --text: #E8ECF3;
+      --muted: #bfc6d6;
+      --active: #ffffff;
+      --active-600: #a3a3a3;
+      --headline: #ffd166;
+      --candle-up: rgb(255, 103, 103);
+      --candle-down: #1763b6;
+      --vol-up: rgba(225, 35, 67, 0.34);
+      --vol-down: rgba(23, 99, 182, 0.30);
+      --font-sm: 12.5px;
+      --font-md: 14.5px;
+      --font-lg: 18px;
+    }
+
+    body {
+      margin: 0;
+      background: var(--panel);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      position: relative;
+      background: var(--panel);
+    }
+
+    .left-tools {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .header-title {
+      text-align: center;
+      flex: 1;
+      /* 중앙 배치 */
+    }
+
+    .scenario-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #bbbbbb;
+    }
+
+    .balances {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      gap: 10px;
+    }
+
+    .b-item {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(63, 63, 63, 0), rgb(63, 63, 63));
+    }
+
+    .b-label {
+      font-size: 9px;
+      color: #bac0cc;
+    }
+
+    .b-value {
+      font-size: 16px;
+      font-weight: 800;
+      color: #eef3ff;
+    }
+
+    .b-value.positive {
+      color: #9CD67A;
+    }
+
+    .b-value.negative {
+      color: #FF7A7A;
+    }
+
+    .coin-icon {
+      width: 22px;
+      /* 아이콘 크기 */
+      height: 22px;
+      vertical-align: middle;
+    }
+
+    #krwBalance::after {
+      content: "₩";
+      margin-left: 2px;
+      font-size: 14px;
+      color: #eef3ff;
+    }
+
+    .scenario-subtitle {
+      font-size: var(--font-lg);
+      font-weight: bold;
+      color: var(--text);
+    }
+
+    .header-date {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      color: #ffffff;
+      font-size: 15px;
+      opacity: .95;
+    }
+
+    .scenario-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .back-btn {
+      font-size: 12px;
+      padding: 9px 12px;
+      border-radius: 12px;
+      background: rgba(63, 63, 63, 0.705);
+      border: 1px solid var(--hairline);
+      color: #dfe5f1;
+      text-decoration: none;
+      font-weight: 700;
+      cursor: pointer;
+      height: 35px;
+      display: flex;
+      align-items: center;
+    }
+
+    .back-btn:hover {
+      background: #2c2c2c;
+      color: var(--active);
+    }
+
+    .back-icon {
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .back-text {
+      font-size: var(--font-sm);
+      font-weight: 600;
+    }
+
+    .header-title {
+      text-align: center;
+      flex: 1;
+    }
+
+    .scenario-badge {
+      padding: 6px 16px;
+      border-radius: 9999px;
+      /* 완전히 둥근 pill */
+      background: rgba(49, 49, 49, 0.705);
+      border: 1px solid #bbb;
+      color: #bbb;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .scenario-subtitle {
+      font-size: var(--font-lg);
+      font-weight: bold;
+      color: var(--text);
+    }
+
+    .price-box {
+      text-align: center;
+    }
+
+    .price-main {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--active);
+    }
+
+    .price-sub {
+      font-size: var(--font-md);
+      margin-top: 4px;
+      color: var(--muted);
+    }
+
+    .price-sub.positive {
+      color: var(--candle-up);
+    }
+
+    .price-sub.negative {
+      color: var(--candle-down);
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: #00d4aa;
+    }
+
+    .balance-info {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .balance-item {
+      flex: 1;
+      background: linear-gradient(180deg, rgba(63, 63, 63, 0), rgb(63, 63, 63));
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 16px;
+      text-align: center;
+    }
+
+    .balance-label {
+      font-size: var(--font-sm);
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .balance-value {
+      font-size: var(--font-lg);
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .balance-value.positive {
+      color: var(--candle-up);
+    }
+
+    .balance-value.negative {
+      color: var(--candle-down);
+    }
+
+    .main-container {
+      display: grid;
+      grid-template-columns: 230px 1fr 280px;
+      /* ✅ 좌측 220px, 우측 280px, 나머지 전부 중앙 */
+      height: calc(100vh - 85px);
+      gap: 1px;
+      /* ✅ 공간 제거 */
+      background: #2d3748;
+    }
+
+    .left-panel {
+      background: #1a1f2e;
+      display: flex;
+      flex-direction: column;
+      width: 230px;
+      min-width: 200px;
+    }
+
+    .news-section {
+      border-top: 1px solid #2d3748;
+      padding: 12px 8px;
+      /* ✅ 내부 여백 축소 */
+      overflow-y: auto;
+      flex: 4;
+    }
+
+    .news-title {
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 13px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    #news-timeline {
+      max-height: 600px;
+      overflow-y: auto;
+      font-size: 12px;
+      /* ✅ 뉴스 항목 글씨 크기 줄임 */
+      line-height: 1.4;
+    }
+
+    .news-entry {
+      padding: 5px 0;
+    }
+
+    .market-select {
+      padding: 20px;
+      border-bottom: 1px solid #2d3748;
+    }
+
+    .market-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .market-tab {
+      padding: 8px 15px;
+      background: #2d3748;
+      border: none;
+      color: #8892b0;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .market-tab.active {
+      background: #00d4aa;
+      color: #1a1f2e;
+    }
+
+    .market-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .market-item {
+      padding: 12px 20px;
+      border-bottom: 1px solid #2d3748;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .market-item:hover {
+      background: #2d3748;
+    }
+
+    .market-item.active {
+      background: #00d4aa;
+      color: #1a1f2e;
+    }
+
+    .market-name {
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .market-price {
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .price-change {
+      font-size: 12px;
+    }
+
+    .price-up {
+      color: #d73527;
+    }
+
+    .price-down {
+      color: #1261c4;
+    }
+
+    .center-panel {
+      background: #1a1f2e;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-header {
+      padding: 5px 15px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .current-price {
+      font-size: 28px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .price-info {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .simulation-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .control-btn {
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      border: 1px solid #414141;
+      background: #202020;
+      color: #b1b1b1;
+      cursor: pointer;
+      height: 32px;
+    }
+
+    .control-btn:hover {
+      background: #2c2c2c;
+    }
+
+    .control-btn.active {
+      border-color: var(--active);
+      color: var(--active);
+    }
+
+    .speed-control {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .speed-slider {
+      width: 130px;
+      accent-color: #cacaca;
+    }
+
+    .chart-container {
+      flex: 1;
+      padding: 8px;
+      position: relative;
+      background: #1b1b1b;
+    }
+
+    #priceChart {
+      width: 100%;
+      height: 100%;
+    }
+
+    .right-panel {
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      min-width: unset;
+    }
+
+    .trading-section {
+      flex: 1;
+      padding: 15px 6px;
+    }
+
+    .trade-header {
+      width: 100%;
+      border-bottom: 1px solid var(--line);
+      margin: 0;
+      padding: 0;
+    }
+
+    .trading-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%;
+      height: 50px;
+      font-size: 20px;
+      margin: 0;
+      padding: 0;
+      border-radius: 0;
+      overflow: hidden;
+    }
+
+    .trading-tab {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-md);
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      border: none;
+      line-height: 1;
+      height: 100%;
+    }
+
+    .trading-tab.buy {
+      background: #661f1a;
+    }
+
+    /* ✅ 어두운 빨강 */
+    .trading-tab.sell {
+      background: #123764;
+    }
+
+    /* ✅ 어두운 파랑 */
+    .trading-tab.active {
+      opacity: 0.9;
+    }
+
+    .order-form {
+      margin: 0;
+      /* ✅ 바깥 여백 제거 */
+      padding: 0;
+      /* ✅ 내부 여백 제거 */
+      background: transparent;
+      /* ✅ 배경 없애고 우측패널 배경 그대로 사용 */
+      border: none;
+      /* ✅ 테두리 제거 */
+      border-radius: 0;
+      /* ✅ 둥근 모서리 제거 */
+      width: 100%;
+      /* ✅ 패널 전체 가로 차지 */
+      box-sizing: border-box;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ffffff;
+      /* ✅ 상단 헤더와 동일 텍스트 색 */
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px;
+      /* ✅ 살짝 줄여서 높이 조정 */
+      border: 1px solid var(--line);
+      background: var(--panel);
+      /* ✅ 헤더와 동일한 배경색 */
+      color: var(--text);
+      /* ✅ 디자인 텍스트 색상 */
+      border-radius: 8px;
+      /* ✅ 둥근 정도 줄임 */
+      font-size: var(--font-md);
+      height: 38px;
+      /* ✅ 고정 높이 */
+      box-sizing: border-box;
+      -moz-appearance: textfield;
+    }
+
+    .form-input::-webkit-outer-spin-button,
+    .form-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #00d4aa;
+    }
+
+    .percentage-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      align-items: center;
+    }
+
+    .percentage-buttons {
+      display: flex;
+      gap: 5px;
+      flex-grow: 1;
+    }
+
+    .percentage-btn {
+      padding: 8px 0;
+      /* ✅ 높이 줄임 */
+      flex: 1;
+      background: var(--panel);
+      /* ✅ 배경 통일 */
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      /* ✅ pill → 살짝 둥글게 */
+      font-size: var(--font-sm);
+      font-weight: 600;
+      color: var(--text);
+      /* ✅ 텍스트 색 통일 */
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      height: 38px;
+      /* ✅ 입력칸과 동일 높이 */
+      box-sizing: border-box;
+    }
+
+    .percentage-btn:hover {
+      background: #1f2535;
+      border-color: #5a5a5a;
+    }
+
+    .percentage-input-group {
+      display: flex;
+      align-items: center;
+      background: var(--panel);
+      /* ✅ 패널 색상 통일 */
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      height: 38px;
+      /* ✅ 버튼과 입력칸 높이 동일 */
+      padding: 0 6px;
+      box-sizing: border-box;
+    }
+
+    .percentage-input {
+      width: 70px;
+      height: 35px;
+      padding: 8px;
+      border: none;
+      background: transparent;
+      text-align: right;
+      color: #ffffff;
+      font-size: 12px;
+      -moz-appearance: textfield;
+    }
+
+    .percentage-input::-webkit-outer-spin-button,
+    .percentage-input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .order-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      font-size: var(--font-md);
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      color: #fff;
+      transition: opacity 0.2s, transform 0.02s;
+    }
+
+    .order-btn.buy-btn {
+      background: #b52b20;
+      color: #ffffff;
+    }
+
+    .order-btn.sell-btn {
+      background: #0f4e9c;
+      color: #ffffff;
+    }
+
+    .order-btn:hover {
+      opacity: 0.85;
+    }
+
+    .order-btn:active {
+      transform: translateY(0.5px);
+    }
+
+    .order-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .holdings-section {
+      border-top: 1px solid #2d3748;
+      padding: 20px;
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .holdings-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #ffffff;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #2d3748;
+    }
+
+    #holdingsList {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .holding-item {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      padding: 12px 5px;
+      border-bottom: 1px solid #2d3748;
+      font-size: 14px;
+    }
+
+    .holding-item:last-child {
+      border-bottom: none;
+    }
+
+    .holding-symbol {
+      font-weight: bold;
+      color: #ffffff;
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+
+    .holding-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px 10px;
+      font-size: 12px;
+    }
+
+    .detail-label {
+      color: #8892b0;
+    }
+
+    .detail-value {
+      text-align: right;
+      font-weight: bold;
+    }
+
+    .holding-pnl {
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .positive {
+      color: #d73527;
+    }
+
+    .negative {
+      color: #1261c4;
+    }
+
+    .time-display {
+      padding: 10px 20px;
+      background: #2d3748;
+      text-align: center;
+      font-family: monospace;
+      font-size: 16px;
+      color: #00d4aa;
+    }
+
+    .status-bar {
+      padding: 10px 20px;
+      background: #222222;
+      display: flex;
+      justify-content: space-between;
+      /* 좌/우 균형 */
+      align-items: center;
+      font-size: 14px;
+      gap: 20px;
+      /* 요소 간 간격 */
+    }
+
+    #timeDisplay {
+      color: #00d4aa;
+      /* 시뮬시간 강조 */
+      font-family: monospace;
+      font-size: 14px;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00d4aa;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+
+      100% {
+        opacity: 1;
+      }
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+    }
+
+    .modal-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #2e2e2e;
+      border-radius: 8px;
+      padding: 30px;
+      min-width: 400px;
+      border: 1px solid #000000;
+    }
+
+    .modal-header {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #ffffff;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: #8892b0;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .order-summary {
+      background: #222222;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .confirm-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid #2a2f38;
+      background: linear-gradient(180deg, var(--active), var(--active-600));
+      color: #0b0c0f;
+      font-size: var(--font-md);
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.02s;
+    }
+
+    .confirm-btn:hover {
+      opacity: 0.85;
+    }
+
+    .confirm-btn:active {
+      transform: translateY(0.5px);
+    }
+
+    .error-message {
+      color: #e53e3e;
+      background: rgba(229, 62, 62, 0.1);
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+
+    .pill-btn {
+      flex: 1;
+      padding: 12px 0;
+      background: #473f36;
+      border: 1px solid #473f36;
+      border-radius: 9999px;
+      /* 완전 둥근 pill */
+      color: #c8c8c8;
+      font-weight: 700;
+      font-size: var(--font-md);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+
+    .pill-btn:hover {
+      background: #5c5246;
+      border-color: #5c5246;
+      color: var(--active);
+    }
+
+    #news-popup #news-orderConfirm.buy-btn {
+      background: #992d2f !important;
+      color: #fff !important;
+    }
+
+    #news-popup #news-orderConfirm.sell-btn {
+      background: #115191 !important;
+      color: #fff !important;
+    }
+
+    .currency-krw {
+      color: #ffd166;
+      font-weight: 800;
+      font-size: 0.8em;
+    }
+
+    /* 뉴스 팝업 제목 밑줄 */
+    #news-popup-title {
+      border-bottom: 1px solid #444;
+      border-top: 1px solid #444;
+      padding-bottom: 5px;
+    }
+
+    /* 뉴스 팝업 날짜 색상 변경 */
+    #news-popup-date {
+      color: #4f4f4f !important;
+      font-weight: bold;
+    }
+
+    #news-popup {
+      width: 500px !important;
+      max-width: 90%;
+      max-height: none !important;
+      overflow-y: visible !important;
+    }
+
+    /* 뉴스 팝업 입력 영역 공통 */
+    #news-popup .form-input,
+    #news-popup .percentage-input,
+    #news-popup .percentage-btn {
+      background: #565048 !important;
+      /* 팝업 배경(#1a1f2e)보다 밝게 */
+      color: #ffffff !important;
+      border: 1px solid #444 !important;
+      border-radius: 6px;
+    }
+
+    /* 버튼 그룹 컨테이너는 투명 처리 (배경 번짐 제거) */
+    #news-popup .percentage-controls,
+    #news-popup .percentage-input-group {
+      background: transparent !important;
+      border: none !important;
+    }
+
+    /* 입력창 placeholder 색상 */
+    #news-popup .form-input::placeholder,
+    #news-popup .percentage-input::placeholder {
+      color: #aaa !important;
+    }
+
+    /* 총액 표시 input (readonly) 강조 */
+    #news-popup #news-orderTotal {
+      background: #565048 !important;
+      color: #ffd166 !important;
+      /* 강조 색상 */
+      font-weight: bold;
+    }
+
+    #news-popup .form-label {
+      color: #000 !important;
+      font-weight: bold;
+    }
+
+    @media (max-width: 1200px) {
+      .main-container {
+        grid-template-columns: 250px 1fr 300px;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .main-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr auto;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <div class="left-tools">
+      <a href="javascript:history.back()" class="back-btn">← 튜토리얼</a>
+    </div>
+    <div class="scenario-wrap">
+      <span class="scenario-badge">SCENARIO 01</span>
+      <span class="scenario-title">BTC 과거 데이터 모의투자</span>
+    </div>
+    <div class="balances">
+      <div class="b-item">
+        <div class="b-label">보유 KRW</div>
+        <div class="b-value">
+          <span id="krwBalance">10,000,000</span>
+        </div>
+      </div>
+      <div class="b-item">
+        <div class="b-label">총 자산</div>
+        <div class="b-value">
+          <img src="/images/coin.png" alt="코인" class="coin-icon">
+          <span id="totalAssets">10,000,000</span>
+        </div>
+      </div>
+      <div class="b-item">
+        <div class="b-label">수익률</div>
+        <div class="b-value">
+          <span id="profitRate">0.00%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-container">
+    <div class="left-panel" style="background: var(--panel);">
+      <div class="news-section" style="border-top:1px solid #2d3748; padding:15px 10px; overflow-y:auto; flex:4;">
+        <div class="news-title" style="font-weight:bold; margin-bottom:10px;">뉴스 타임라인</div>
+        <div id="news-timeline" class="news-list" style="max-height:600px; overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <div class="center-panel">
+      <div class="chart-header">
+        <div class="price-box">
+          <div class="price-main" id="currentPrice">-</div>
+          <div class="price-sub" id="priceChange">-</div>
+        </div>
+        <div class="simulation-controls">
+          <button class="control-btn" id="playBtn">▶ 시작</button>
+          <button class="control-btn" id="pauseBtn">⏸ 일시정지</button>
+          <button class="control-btn" id="resetBtn">↻ 리셋</button>
+          <div class="speed-control">
+            <span>속도:</span>
+            <input type="range" class="speed-slider" id="speedSlider" min="1" max="10" value="1">
+            <span id="speedDisplay">1x</span>
+          </div>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="priceChart"></canvas>
+      </div>
+      <div class="status-bar">
+        <div class="status-indicator">
+          <div class="status-dot"></div>
+          <span id="statusText">시뮬레이션 대기 중</span>
+        </div>
+        <div id="timeDisplay">시뮬레이션 시간: 준비 중...</div>
+        <div id="dataProgress">데이터 로딩 중...</div>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="trade-header">
+        <div class="trading-tabs">
+          <button class="trading-tab buy active" id="buyTab">매수</button>
+          <button class="trading-tab sell" id="sellTab">매도</button>
+        </div>
+      </div>
+      <div class="trading-section">
+        <div class="order-form" id="orderForm">
+          <div class="form-group">
+            <label class="form-label">주문 수량</label>
+            <input type="number" class="form-input" id="orderAmount" placeholder="0" step="0.00000001">
+            <div class="percentage-controls">
+              <div class="percentage-buttons">
+                <button class="percentage-btn" data-percent="25">25%</button>
+                <button class="percentage-btn" data-percent="50">50%</button>
+                <button class="percentage-btn" data-percent="75">75%</button>
+                <button class="percentage-btn" data-percent="100">MAX</button>
+              </div>
+              <div class="percentage-input-group">
+                <input type="number" id="percentageInput" class="percentage-input" placeholder="직접입력">
+                <span>%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">주문 가격</label>
+            <input type="number" class="form-input" id="orderPrice" placeholder="시장가">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">주문 총액</label>
+            <input type="number" class="form-input" id="orderTotal" placeholder="0" readonly>
+          </div>
+
+          <button class="order-btn buy-btn" id="orderBtn">매수</button>
+        </div>
+
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+      </div>
+
+      <div class="holdings-section">
+        <div class="holdings-title">보유 자산</div>
+        <div id="holdingsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="orderModal">
+    <div class="modal-content">
+      <button class="close-btn" id="closeModal">&times;</button>
+      <div class="modal-header">주문 확인</div>
+      <div class="order-summary" id="orderSummary">
+      </div>
+      <button class="confirm-btn" id="confirmOrder">주문 확인</button>
+    </div>
+  </div>
+  <div class="modal" id="resultsModal">
+    <div class="modal-content">
+      <div class="modal-header">🏆 시뮬레이션 결과</div>
+      <div class="order-summary" id="resultsSummary">
+        <div class="summary-row">
+          <span>총 자산</span>
+          <span id="finalAssets"></span>
+        </div>
+        <div class="summary-row">
+          <span>총 손익</span>
+          <span id="finalPnl"></span>
+        </div>
+        <div class="summary-row">
+          <span>수익률</span>
+          <span id="finalPnlRate"></span>
+        </div>
+      </div>
+      <button class="confirm-btn" id="closeResultsModal">확인</button>
+    </div>
+  </div>
+
+  <div id="overlay"
+    style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.6); z-index:1500;">
+  </div>
+  <div id="news-popup" style="display:none; position:fixed; top:20%; left:50%; transform:translate(-50%,-20%);
+                            background:url('/images/news1.png') center center / cover no-repeat; 
+                            border:1px solid #444; padding:25px; border-radius:8px;
+                            z-index:2000; text-align:left; width:600px; max-height:70vh; overflow-y:auto;
+                            color:#242424; font-weight:bold;">
+    <h3 id="news-popup-title"
+      style="margin-bottom:10px; font-size:1.4rem; border-bottom:1px solid #444; padding-bottom:5px;"></h3>
+    <div id="news-popup-date" style="font-size:0.9rem; color:#000; margin-bottom:15px; font-weight:bold;"></div>
+    <p id="news-popup-desc" style="margin:10px 0; line-height:1.5; white-space:pre-line;"></p>
+    <!-- 1단계: 선택 버튼 (항상 보임, 기존 스타일 복원) -->
+    <div id="news-popup-choice" style="display:flex; gap:10px; margin-top:15px;">
+      <button id="news-popup-buy" class="pill-btn">매수</button>
+      <button id="news-popup-sell" class="pill-btn">매도</button>
+      <button id="news-popup-hold" class="pill-btn">유지</button>
+    </div>
+
+    <!-- 2단계: 실제 주문창 (버튼은 그대로 두고, 주문창만 추가로 노출됨) -->
+    <div id="news-trade-form" style="display:none; margin-top:20px;">
+      <div class="form-group">
+        <label class="form-label">주문 수량</label>
+        <input type="number" class="form-input" id="news-orderAmount" placeholder="0" step="0.00000001">
+        <div class="percentage-controls">
+          <div class="percentage-buttons">
+            <button class="percentage-btn" data-percent="25">25%</button>
+            <button class="percentage-btn" data-percent="50">50%</button>
+            <button class="percentage-btn" data-percent="75">75%</button>
+            <button class="percentage-btn" data-percent="100">MAX</button>
+          </div>
+          <div class="percentage-input-group">
+            <input type="number" id="news-percentageInput" class="percentage-input" placeholder="직접입력">
+            <span>%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">주문 가격</label>
+        <input type="number" class="form-input" id="news-orderPrice" placeholder="시장가">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">주문 총액</label>
+        <input type="number" class="form-input" id="news-orderTotal" placeholder="0" readonly>
+      </div>
+
+      <!-- 매수/매도에 따라 동적으로 클래스 변경 -->
+      <button id="news-orderConfirm" class="order-btn buy-btn">매수</button>
+    </div>
+  </div>
+
+  <script>
+    class HistoricalTradingSystem {
+      constructor() {
+        this.currentMarket = 'btc';
+        this.isBuyMode = true;
+        this.isSimulationRunning = false;
+        this.simulationSpeed = 3;
+        this.currentDataIndex = 0;
+        this.startIndex = 0; // 🔹 시뮬레이션 시작 인덱스
+        this.historicalData = {};
+        this.chart = null;
+
+        this.initialKrw = 10000000;
+        this.portfolio = {
+          krw: this.initialKrw,
+          btc: { amount: 0, totalCost: 0 },
+          eth: { amount: 0, totalCost: 0 },
+          xrp: { amount: 0, totalCost: 0 }
+        };
+
+        this.currentPrices = { btc: 0, eth: 0, xrp: 0 };
+        this.tradeHistory = [];
+        this.newsList = [];
+
+        this.init();
+      }
+
+      async init() {
+        this.setupEventListeners();
+        await this.loadHistoricalData();
+        await this.loadNews();
+
+        // 🔹 초기 한 달 구간 (2021-03-25 ~ 2021-04-25) 미리 표시
+        const preloadEnd = new Date("2021-04-25T23:59:59+09:00").getTime();
+        const data = this.historicalData[this.currentMarket];
+
+        // preloadIndex = 한 달 치 마지막 데이터 인덱스
+        let preloadIndex = data.findIndex(d => d.timestamp >= preloadEnd);
+        if (preloadIndex === -1) preloadIndex = 0;
+
+        // ✅ 차트에는 preloadIndex까지 먼저 그리기
+        this.currentDataIndex = preloadIndex;
+
+        // 🔹 시뮬레이션 시작일자 (2021-04-26 이후 데이터부터 진행)
+        this.startIndex = preloadIndex;
+
+        this.initChart();
+        this.updateDisplay();
+
+        // ✅ 초기 표시 구간 즉시 반영
+        this.updateMarketPrices();   // 가격/변동률 업데이트
+        this.updateChart();          // 차트 갱신
+        document.getElementById('speedSlider').value = this.simulationSpeed;
+        document.getElementById('speedDisplay').textContent = `${this.simulationSpeed}x`;
+      }
+
+      async loadNews() {
+        try {
+          const res = await fetch("/api/scenario1/news");
+          this.newsList = await res.json();
+          document.getElementById("news-timeline").innerHTML = "";
+        } catch (err) {
+          console.error("뉴스 불러오기 실패:", err);
+          this.newsList = [];
+        }
+      }
+
+      setupEventListeners() {
+        document.querySelectorAll('.market-item').forEach(item => {
+          item.addEventListener('click', (e) => {
+            document.querySelectorAll('.market-item').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            this.currentMarket = item.dataset.market;
+            this.updateDisplay();
+          });
+        });
+
+        document.getElementById('percentageInput').addEventListener('input', (e) => {
+          const percentValue = parseFloat(e.target.value);
+          if (!isNaN(percentValue) && percentValue >= 0) {
+            this.setOrderAmount(percentValue > 100 ? 100 : percentValue);
+          }
+        });
+
+        document.getElementById('buyTab').addEventListener('click', () => this.switchTradingMode(true));
+        document.getElementById('sellTab').addEventListener('click', () => this.switchTradingMode(false));
+        document.getElementById('playBtn').addEventListener('click', () => this.startSimulation());
+        document.getElementById('pauseBtn').addEventListener('click', () => this.pauseSimulation());
+        document.getElementById('resetBtn').addEventListener('click', () => this.resetSimulation());
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+          this.simulationSpeed = parseInt(e.target.value);
+          document.getElementById('speedDisplay').textContent = `${this.simulationSpeed}x`;
+          if (this.isSimulationRunning) {
+            this.pauseSimulation();
+            this.startSimulation();
+          }
+        });
+        document.querySelectorAll('.percentage-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const percent = parseInt(e.target.dataset.percent);
+            this.setOrderAmount(percent);
+          });
+        });
+        document.getElementById('orderAmount').addEventListener('input', () => this.calculateOrderTotal());
+        document.getElementById('orderPrice').addEventListener('input', () => this.calculateOrderTotal());
+        document.getElementById('orderBtn').addEventListener('click', () => this.showOrderModal());
+        document.getElementById('closeModal').addEventListener('click', () => this.hideOrderModal());
+        document.getElementById('confirmOrder').addEventListener('click', () => this.executeOrder());
+        document.getElementById('closeResultsModal').addEventListener('click', () => {
+          document.getElementById('resultsModal').style.display = 'none';
+        });
+      }
+
+      async loadHistoricalData() {
+        try {
+          document.getElementById('dataProgress').textContent = '서버 데이터 로딩 중...';
+
+          const markets = ['btc'];   // ✅ BTC만 사용
+          let loadedCount = 0;
+
+          for (const market of markets) {
+            try {
+              const response = await fetch(`/api/history?market=${market}&limit=10000`);
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+
+              const data = await response.json();
+
+              this.historicalData[market] = data.map(item => ({
+                candle_date_time_kst: item.candle_date_time_kst,
+                timestamp: new Date(item.candle_date_time_kst).getTime(),
+                opening_price: parseFloat(item.opening_price),
+                high_price: parseFloat(item.high_price),
+                low_price: parseFloat(item.low_price),
+                trade_price: parseFloat(item.trade_price),
+                volume: parseFloat(item.volume || 0)
+              }));
+
+              loadedCount++;
+              document.getElementById('dataProgress').textContent =
+                `데이터 로딩 중... (${loadedCount}/${markets.length})`;
+
+            } catch (error) {
+              console.error(`${market.toUpperCase()} 데이터 로딩 실패:`, error);
+              this.historicalData[market] = [];
+            }
+          }
+
+          const totalDataCount = Object.values(this.historicalData)
+            .reduce((sum, data) => sum + data.length, 0);
+
+          if (totalDataCount > 0) {
+            document.getElementById('dataProgress').textContent =
+              `데이터 로딩 완료 (총 ${totalDataCount}개 레코드)`;
+          } else {
+            document.getElementById('dataProgress').textContent = '데이터 로딩 실패';
+          }
+
+        } catch (error) {
+          console.error('데이터 로딩 실패:', error);
+          document.getElementById('dataProgress').textContent = '데이터 로딩 실패';
+        }
+      }
+
+      initChart() {
+        if (this.chart) this.chart.destroy();
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        this.chart = new Chart(ctx, {
+          type: 'candlestick',
+          data: {
+            datasets: [
+              {
+                type: 'candlestick',
+                label: 'Price',
+                data: [],
+                yAxisID: 'yPrice',
+                color: {
+                  up: getComputedStyle(document.documentElement).getPropertyValue('--candle-up').trim(),
+                  down: getComputedStyle(document.documentElement).getPropertyValue('--candle-down').trim(),
+                  unchanged: '#9aa0a6'
+                }
+              },
+              {
+                type: 'bar',
+                label: 'Volume',
+                data: [],
+                yAxisID: 'yVolume',
+              }
+            ],
+          },
+          options: {
+            animation: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                type: 'time',
+                time: {
+                  unit: 'day',
+                  tooltipFormat: 'yyyy-MM-dd',
+                  displayFormats: { day: 'MM-dd' }
+                },
+                adapters: {
+                  date: luxon
+                },
+                grid: { color: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.08)' },
+                ticks: { color: '#8892b0', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
+              },
+              yVolume: {
+                type: 'linear',
+                position: 'left',
+                stack: 'stock_chart',
+                stackWeight: 1,
+                grid: {
+                  drawOnChartArea: false,
+                  borderColor: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: { display: false }
+              },
+              yPrice: {
+                type: 'linear',
+                position: 'left',
+                stack: 'stock_chart',
+                stackWeight: 4,
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.1)',
+                  borderColor: 'rgba(255, 255, 255, 0.1)'
+                },
+                ticks: { color: '#8892b0' }
+              }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: { mode: 'index', intersect: false }
+            }
+          }
+        });
+      }
+
+      updateChart() {
+        if (!this.chart || !this.historicalData[this.currentMarket]) return;
+
+        const slicedData = this.historicalData[this.currentMarket].slice(0, this.currentDataIndex + 1);
+        const displayData = slicedData.slice(-70);
+
+        // ✅ 캔들 데이터 (몸통 표시)
+        const priceData = displayData.map(d => {
+          const isUp = parseFloat(d.trade_price) >= parseFloat(d.opening_price);
+          const candleColor = isUp
+            ? getComputedStyle(document.documentElement).getPropertyValue('--candle-up').trim()
+            : getComputedStyle(document.documentElement).getPropertyValue('--candle-down').trim();
+          return {
+            x: new Date(d.candle_date_time_kst).getTime(),
+            o: parseFloat(d.opening_price),
+            h: parseFloat(d.high_price),
+            l: parseFloat(d.low_price),
+            c: parseFloat(d.trade_price),
+            color: candleColor   // 🔹 캔들별 색상 지정
+          };
+        });
+
+        // ✅ 거래량 데이터
+        const volumeData = displayData.map(d => ({
+          x: new Date(d.candle_date_time_kst).getTime(),
+          y: parseFloat(d.volume || 0),
+        }));
+
+        // ✅ 거래량 색상 (상승 = 빨강, 하락 = 파랑)
+        const volumeColors = displayData.map(d =>
+          parseFloat(d.trade_price) >= parseFloat(d.opening_price)
+            ? getComputedStyle(document.documentElement).getPropertyValue('--vol-up').trim()
+            : getComputedStyle(document.documentElement).getPropertyValue('--vol-down').trim()
+        );
+
+        // 차트 데이터 갱신
+        this.chart.data.datasets[0].data = priceData;   // 캔들
+        this.chart.data.datasets[1].data = volumeData;  // 거래량
+        this.chart.data.datasets[1].backgroundColor = volumeColors;
+
+        this.chart.update('none');
+      }
+
+      updateMarketPrices() {
+        Object.keys(this.historicalData).forEach(market => {
+          if (this.historicalData[market] && this.historicalData[market].length > 0) {
+            const currentData = this.historicalData[market][this.currentDataIndex] || this.historicalData[market][0];
+            const prevData = this.historicalData[market][this.currentDataIndex - 1] || currentData;
+
+            const price = parseFloat(currentData.trade_price);
+            const prevPrice = parseFloat(prevData.trade_price);
+            const change = ((price - prevPrice) / prevPrice * 100).toFixed(2);
+
+            this.currentPrices[market] = price;
+
+            const priceElement = document.getElementById(`${market}-price`);
+            const changeElement = document.getElementById(`${market}-change`);
+
+            if (priceElement) {
+              priceElement.textContent = price.toLocaleString();
+            }
+
+            if (changeElement) {
+              changeElement.textContent = `${change > 0 ? '+' : ''}${change}%`;
+              changeElement.className = `price-change ${change >= 0 ? 'price-up' : 'price-down'}`;
+            }
+          }
+        });
+
+        this.updateDisplay();
+      }
+
+      updateCurrentMarketDisplay() {
+        const currentData = this.historicalData[this.currentMarket]?.[this.currentDataIndex];
+        if (!currentData) return;
+
+        const price = parseFloat(currentData.trade_price);
+        const prevData = this.historicalData[this.currentMarket]?.[this.currentDataIndex - 1];
+
+        document.getElementById('currentPrice').innerHTML = `<span class="currency-krw">BTC/KRW </span>${price.toLocaleString()} &#8361;`;
+
+        if (prevData) {
+          const prevPrice = parseFloat(prevData.trade_price);
+          const change = price - prevPrice;
+          const changePercent = ((change / prevPrice) * 100).toFixed(2);
+
+          const changeElement = document.getElementById('priceChange');
+          changeElement.textContent = `${change >= 0 ? '+' : ''}${change.toLocaleString()} (${changePercent}%)`;
+          changeElement.className = change >= 0 ? 'positive' : 'negative';
+        }
+
+        if (currentData.candle_date_time_kst) {
+          const date = new Date(currentData.candle_date_time_kst);
+          // KST로 변환 후 초 제거
+          const kstString = date.toLocaleString("ko-KR", {
+            timeZone: "Asia/Seoul",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit"
+          }).replace(/\s/g, ''); // 공백 제거 (2021.05.19 00:00 → 2021.05.19 00:00)
+
+          document.getElementById('timeDisplay').textContent =
+            `시뮬레이션 시간 : ${kstString}`;
+        }
+      }
+
+      resetSimulation() {
+        this.pauseSimulation();
+
+        // 🔹 초기 한 달(3/25~4/25) 데이터까지 미리 표시
+        const preloadEnd = new Date("2021-04-25T23:59:59+09:00").getTime();
+        const data = this.historicalData[this.currentMarket];
+        let preloadIndex = data.findIndex(d => d.timestamp >= preloadEnd);
+        if (preloadIndex === -1) preloadIndex = 0;
+
+        this.currentDataIndex = preloadIndex;  // ✅ 한 달 구간 미리 그림
+        this.startIndex = preloadIndex;        // ✅ 시뮬레이션 시작점 재설정
+
+        this.portfolio = {
+          krw: this.initialKrw,
+          btc: { amount: 0, totalCost: 0 },
+          eth: { amount: 0, totalCost: 0 },
+          xrp: { amount: 0, totalCost: 0 }
+        };
+        this.tradeHistory = [];
+
+        // ✅ 뉴스 상태 초기화 (_userAction 제거)
+        this.newsList.forEach(n => delete n._userAction);
+
+        // ✅ 뉴스 타임라인 초기화
+        document.getElementById("news-timeline").innerHTML = "";
+
+        this.updateMarketPrices();
+        this.updateChart(); // ✅ 초기 한 달 데이터 반영
+        document.getElementById('statusText').textContent = '시뮬레이션 리셋 완료';
+      }
+
+      switchTradingMode(isBuy) {
+        this.isBuyMode = isBuy;
+
+        document.querySelectorAll('.trading-tab').forEach(tab => tab.classList.remove('active'));
+        document.getElementById(isBuy ? 'buyTab' : 'sellTab').classList.add('active');
+
+        const orderBtn = document.getElementById('orderBtn');
+        orderBtn.textContent = isBuy ? '매수' : '매도';
+        orderBtn.className = `order-btn ${isBuy ? 'buy-btn' : 'sell-btn'}`;
+
+        this.clearOrderForm();
+      }
+
+      setOrderAmount(percent) {
+        if (document.activeElement.id !== 'percentageInput') {
+          document.getElementById('percentageInput').value = percent;
+        }
+        const currentPrice = this.currentPrices[this.currentMarket];
+        if (!currentPrice || currentPrice === 0) return;
+
+        if (this.isBuyMode) {
+          const availableKrw = this.portfolio.krw;
+          const orderTotal = (availableKrw * percent / 100);
+          const orderAmount = orderTotal / currentPrice;
+
+          document.getElementById('orderAmount').value = orderAmount.toFixed(8);
+        } else {
+          const availableCoin = this.portfolio[this.currentMarket].amount;
+          const orderAmount = (availableCoin * percent / 100);
+
+          document.getElementById('orderAmount').value = orderAmount.toFixed(8);
+        }
+
+        this.calculateOrderTotal();
+      }
+
+      calculateOrderTotal() {
+        const amount = parseFloat(document.getElementById('orderAmount').value) || 0;
+        const price = parseFloat(document.getElementById('orderPrice').value) || this.currentPrices[this.currentMarket];
+        const total = amount * price;
+
+        document.getElementById('orderTotal').value = Math.floor(total);
+      }
+
+      showOrderModal() {
+        const amount = parseFloat(document.getElementById('orderAmount').value);
+        const price = parseFloat(document.getElementById('orderPrice').value) || this.currentPrices[this.currentMarket];
+        const total = amount * price;
+
+        if (!this.validateOrder(amount, price, total)) {
+          return;
+        }
+
+        const summary = `
+                <div class="summary-row">
+                    <span>마켓:</span>
+                    <span>${this.currentMarket.toUpperCase()}/KRW</span>
+                </div>
+                <div class="summary-row">
+                    <span>주문구분:</span>
+                    <span>${this.isBuyMode ? '매수' : '매도'}</span>
+                </div>
+                <div class="summary-row">
+                    <span>주문수량:</span>
+                    <span>${amount.toFixed(8)} ${this.currentMarket.toUpperCase()}</span>
+                </div>
+                <div class="summary-row">
+                    <span>주문단가:</span>
+                    <span>${price.toLocaleString()} KRW</span>
+                </div>
+                <div class="summary-row">
+                    <span>주문총액:</span>
+                    <span>${Math.floor(total).toLocaleString()} KRW</span>
+                </div>
+            `;
+
+        document.getElementById('orderSummary').innerHTML = summary;
+        document.getElementById('orderModal').style.display = 'block';
+      }
+
+      hideOrderModal() {
+        document.getElementById('orderModal').style.display = 'none';
+      }
+
+      validateOrder(amount, price, total) {
+        this.hideError();
+
+        if (!amount || amount <= 0) {
+          this.showError('주문 수량을 입력해주세요.');
+          return false;
+        }
+
+        if (!price || price <= 0) {
+          this.showError('올바른 가격을 입력해주세요.');
+          return false;
+        }
+
+        if (this.isBuyMode) {
+          if (total > this.portfolio.krw) {
+            this.showError('보유 KRW가 부족합니다.');
+            return false;
+          }
+        } else {
+          if (amount > this.portfolio[this.currentMarket].amount) {
+            this.showError(`보유 ${this.currentMarket.toUpperCase()}가 부족합니다.`);
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      executeOrder() {
+        const amount = parseFloat(document.getElementById('orderAmount').value);
+        const price = parseFloat(document.getElementById('orderPrice').value) || this.currentPrices[this.currentMarket];
+        const total = amount * price;
+
+        if (!this.validateOrder(amount, price, total)) {
+          this.hideOrderModal();
+          return;
+        }
+
+        const asset = this.portfolio[this.currentMarket];
+
+        if (this.isBuyMode) {
+          this.portfolio.krw -= total;
+          asset.amount += amount;
+          asset.totalCost += total;
+        } else {
+          this.portfolio.krw += total;
+          if (asset.amount > 0) {
+            const costPerCoin = asset.totalCost / asset.amount;
+            asset.totalCost -= costPerCoin * amount;
+          }
+          asset.amount -= amount;
+          if (asset.amount < 1e-8) {
+            asset.amount = 0;
+            asset.totalCost = 0;
+          }
+        }
+
+        this.tradeHistory.push({
+          timestamp: this.historicalData[this.currentMarket][this.currentDataIndex].timestamp,
+          market: this.currentMarket,
+          type: this.isBuyMode ? 'buy' : 'sell',
+          amount,
+          price,
+          total
+        });
+
+        this.updatePortfolioDisplay();
+        this.clearOrderForm();
+        this.hideOrderModal();
+
+        const message = `${this.isBuyMode ? '매수' : '매도'} 주문이 체결되었습니다.`;
+        document.getElementById('statusText').textContent = message;
+        setTimeout(() => {
+          document.getElementById('statusText').textContent =
+            this.isSimulationRunning ? '시뮬레이션 실행 중' : '시뮬레이션 대기 중';
+        }, 3000);
+      }
+
+      updatePortfolioDisplay() {
+        document.getElementById('krwBalance').textContent = Math.floor(this.portfolio.krw).toLocaleString();
+
+        let totalAssets = this.portfolio.krw;
+        Object.keys(this.portfolio).forEach(market => {
+          if (market !== 'krw') {
+            const asset = this.portfolio[market];
+            const currentPrice = this.currentPrices[market] || 0;
+            totalAssets += asset.amount * currentPrice;
+          }
+        });
+
+        document.getElementById('totalAssets').textContent = Math.floor(totalAssets).toLocaleString();
+
+        const profitRate = ((totalAssets - this.initialKrw) / this.initialKrw * 100).toFixed(2);
+        const profitElement = document.getElementById('profitRate');
+        profitElement.textContent = `${profitRate}%`;
+        profitElement.className = `balance-value ${profitRate >= 0 ? 'positive' : 'negative'}`;
+
+        this.updateHoldingsList();
+      }
+
+      updateHoldingsList() {
+        const holdingsList = document.getElementById('holdingsList');
+        holdingsList.innerHTML = '';
+
+        const krwItem = document.createElement('div');
+        krwItem.className = 'holding-item';
+        krwItem.innerHTML = `
+                <div>
+                    <div class="holding-symbol">KRW</div>
+                    <div>현금</div>
+                </div>
+                <div class="holding-details">
+                    <div class="detail-label">보유금액</div>
+                    <div class="detail-value">${Math.floor(this.portfolio.krw).toLocaleString()} 원</div>
+                </div>
+            `;
+        holdingsList.appendChild(krwItem);
+
+        Object.keys(this.portfolio).forEach(market => {
+          if (market !== 'krw' && this.portfolio[market].amount > 1e-8) {
+            const asset = this.portfolio[market];
+            const currentPrice = this.currentPrices[market] || 0;
+
+            const amount = asset.amount;
+            const avgPrice = (amount > 0) ? asset.totalCost / amount : 0;
+            const currentValue = amount * currentPrice;
+            const pnl = currentValue - asset.totalCost;
+            const pnlRate = (asset.totalCost > 0) ? (pnl / asset.totalCost * 100).toFixed(2) : 0;
+            const pnlClass = pnl >= 0 ? 'positive' : 'negative';
+
+            const coinItem = document.createElement('div');
+            coinItem.className = 'holding-item';
+            coinItem.innerHTML = `
+                        <div>
+                            <div class="holding-symbol">${market.toUpperCase()}</div>
+                            <div class="holding-pnl ${pnlClass}">
+                                ${pnl >= 0 ? '+' : ''}${Math.floor(pnl).toLocaleString()} 원 (${pnlRate}%)
+                            </div>
+                        </div>
+                        <div class="holding-details">
+                            <div class="detail-label">보유수량</div>
+                            <div class="detail-value">${amount.toFixed(8)}</div>
+                            <div class="detail-label">매수평균가</div>
+                            <div class="detail-value">${Math.floor(avgPrice).toLocaleString()}</div>
+                            <div class="detail-label">평가금액</div>
+                            <div class="detail-value">${Math.floor(currentValue).toLocaleString()}</div>
+                        </div>
+                    `;
+            holdingsList.appendChild(coinItem);
+          }
+        });
+      }
+
+      startSimulation() {
+        if (this.isSimulationRunning) return;
+
+        this.isSimulationRunning = true;
+        document.getElementById('statusText').textContent = '시뮬레이션 실행 중';
+        document.getElementById('playBtn').classList.add('active');
+        document.getElementById('pauseBtn').classList.remove('active');
+
+        // 🔹 시뮬레이션 시작은 startIndex부터
+        if (this.currentDataIndex < this.startIndex) {
+          this.currentDataIndex = this.startIndex;
+        }
+
+        this.simulationInterval = setInterval(() => {
+          this.nextDataPoint();
+        }, 1000 / this.simulationSpeed);
+      }
+
+      pauseSimulation() {
+        this.isSimulationRunning = false;
+        document.getElementById('statusText').textContent = '시뮬레이션 일시정지';
+        document.getElementById('playBtn').classList.remove('active');
+        document.getElementById('pauseBtn').classList.add('active');
+
+        if (this.simulationInterval) {
+          clearInterval(this.simulationInterval);
+        }
+      }
+
+      nextDataPoint() {
+        const maxDataLength = this.historicalData[this.currentMarket].length;
+
+        if (this.currentDataIndex >= maxDataLength - 1) {
+          this.pauseSimulation();
+          document.getElementById('statusText').textContent = '시뮬레이션 완료';
+
+          const totalAssets = this.portfolio.krw + Object.keys(this.portfolio)
+            .filter(m => m !== 'krw')
+            .reduce((sum, market) => sum + this.portfolio[market].amount * this.currentPrices[market], 0);
+
+          const profitAmount = totalAssets - this.initialKrw;
+          const profitRate = (profitAmount / this.initialKrw * 100).toFixed(2);
+          const pnlClass = profitAmount >= 0 ? 'positive' : 'negative';
+
+          document.getElementById('finalAssets').textContent = `${Math.floor(totalAssets).toLocaleString()} KRW`;
+
+          const finalPnlEl = document.getElementById('finalPnl');
+          finalPnlEl.textContent = `${profitAmount >= 0 ? '+' : ''}${Math.floor(profitAmount).toLocaleString()} KRW`;
+          finalPnlEl.className = pnlClass;
+
+          const finalPnlRateEl = document.getElementById('finalPnlRate');
+          finalPnlRateEl.textContent = `${profitRate}%`;
+          finalPnlRateEl.className = pnlClass;
+
+          document.getElementById('resultsModal').style.display = 'block';
+          return;
+        }
+
+        // 🔹 일봉 데이터 기준으로 진행 (기존 로직 그대로 사용 가능)
+        const prevTime = this.historicalData[this.currentMarket][this.currentDataIndex]?.timestamp || 0;
+        this.currentDataIndex++;
+        const currentTime = this.historicalData[this.currentMarket][this.currentDataIndex]?.timestamp || prevTime;
+
+        this.updateMarketPrices();
+        this.updateChart();   // ✅ 일봉 데이터일 때도 차트 즉시 갱신
+
+        // 🔹 뉴스 발생 체크 (일봉에서도 동일하게 적용)
+        const matched = this.newsList.find(n => {
+          const newsTime = new Date(n.time.replace(" ", "T") + "+09:00").getTime();
+          return newsTime > prevTime && newsTime <= currentTime;
+        });
+        if (matched) {
+          this.showNewsPopup(matched, false);
+          this.addNewsToTimeline(matched);
+        }
+      }
+
+      addNewsToTimeline(news) {
+        const box = document.getElementById("news-timeline");
+        let div = [...box.children].find(d => d.dataset.time === news.time);
+
+        let actionTag = "";
+        if (news._userAction === "buy") {
+          actionTag = ` <span style="color:#d73527;">(매수)</span>`;
+        } else if (news._userAction === "sell") {
+          actionTag = ` <span style="color:#1261c4;">(매도)</span>`;
+        } else if (news._userAction === "hold") {
+          actionTag = ` <span style="color:#aaa;">(유지)</span>`;
+        }
+
+        if (!div) {
+          div = document.createElement("div");
+          div.classList.add("news-item");
+          div.dataset.time = news.time;
+          box.appendChild(div);
+        }
+
+        div.innerHTML = `
+                    <div class="news-entry">
+                        <strong>${news.time}${actionTag}</strong><br>${news.title}
+                    </div>
+                `;
+        div.onclick = () => this.showNewsPopup(news, true);
+      }
+
+      showNewsPopup(news, readonly = false) {
+        this.pauseSimulation();
+        this.currentNews = news;
+
+        // 날짜 추가
+        const date = new Date(news.time.replace(" ", "T") + "+09:00");
+        const dateStr = date.toLocaleString("ko-KR", {
+          year: "numeric", month: "2-digit", day: "2-digit",
+          hour: "2-digit", minute: "2-digit", timeZone: "Asia/Seoul"
+        });
+
+        document.getElementById("news-popup-title").innerText = `[뉴스] ${news.title}`;
+        document.getElementById("news-popup-date").innerText = `${dateStr}`;
+        document.getElementById("news-popup-desc").innerText = news.description || "";
+        document.getElementById("overlay").style.display = "block";
+        document.getElementById("news-popup").style.display = "block";
+
+        const currentSimTime = this.historicalData[this.currentMarket]?.[this.currentDataIndex]?.timestamp || 0;
+        const newsTime = new Date(news.time.replace(" ", "T") + "+09:00").getTime();
+
+        if (readonly || news._userAction) {
+          document.getElementById("news-popup-choice").style.display = "none";
+          document.getElementById("news-trade-form").style.display = "none";
+        } else {
+          document.getElementById("news-popup-choice").style.display = "flex";
+          document.getElementById("news-trade-form").style.display = "none";
+        }
+
+        // 매수 버튼
+        document.getElementById("news-popup-buy").onclick = () => {
+          this.isBuyMode = true;
+          document.getElementById("news-trade-form").style.display = "block";
+          const confirmBtn = document.getElementById("news-orderConfirm");
+          confirmBtn.textContent = "매수";
+          confirmBtn.className = "order-btn buy-btn";
+        };
+
+        // 매도 버튼
+        document.getElementById("news-popup-sell").onclick = () => {
+          this.isBuyMode = false;
+          document.getElementById("news-trade-form").style.display = "block";
+          const confirmBtn = document.getElementById("news-orderConfirm");
+          confirmBtn.textContent = "매도";
+          confirmBtn.className = "order-btn sell-btn";
+        };
+
+        // 유지 버튼
+        document.getElementById("news-popup-hold").onclick = () => {
+          this.currentNews._userAction = "hold";
+          this.addNewsToTimeline(this.currentNews);
+
+          document.getElementById("news-popup").style.display = "none";
+          document.getElementById("overlay").style.display = "none";
+        };
+
+        // 입력 이벤트 → 총액 자동 계산
+        document.getElementById("news-orderAmount").oninput = () => this.calculateNewsOrderTotal();
+        document.getElementById("news-orderPrice").oninput = () => this.calculateNewsOrderTotal();
+
+        // 퍼센트 버튼
+        document.querySelectorAll('#news-trade-form .percentage-btn').forEach(btn => {
+          btn.onclick = () => {
+            const percent = parseInt(btn.dataset.percent);
+            this.setNewsOrderAmount(percent);
+          };
+        });
+
+        // 직접입력 %
+        document.getElementById("news-percentageInput").oninput = (e) => {
+          let val = parseFloat(e.target.value);
+          if (isNaN(val) || val < 0) val = 0;
+          if (val > 100) val = 100;
+          this.setNewsOrderAmount(val);
+        };
+        document.getElementById("overlay").onclick = () => {
+          this.currentNews._userAction = "hold";
+          this.addNewsToTimeline(this.currentNews);
+
+          document.getElementById("news-popup").style.display = "none";
+          document.getElementById("overlay").style.display = "none";
+        };
+        // 확인 버튼
+        document.getElementById("news-orderConfirm").onclick = () => {
+          const amount = parseFloat(document.getElementById("news-orderAmount").value);
+          const price = parseFloat(document.getElementById("news-orderPrice").value) || this.currentPrices[this.currentMarket];
+          const total = amount * price;
+
+          // 팝업 전용 유효성 검사
+          if (!amount || amount <= 0) {
+            alert("주문 수량을 입력해주세요.");
+            return;
+          }
+          if (!price || price <= 0) {
+            alert("올바른 가격을 입력해주세요.");
+            return;
+          }
+
+          this.currentNews._userAction = this.isBuyMode ? "buy" : "sell";
+          this.addNewsToTimeline(this.currentNews);
+
+          const summary = `
+                    <div class="summary-row">
+                        <span>마켓:</span>
+                        <span>${this.currentMarket.toUpperCase()}/KRW</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>주문구분:</span>
+                        <span>${this.isBuyMode ? '매수' : '매도'}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>주문수량:</span>
+                        <span>${amount.toFixed(8)} ${this.currentMarket.toUpperCase()}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>주문단가:</span>
+                        <span>${price.toLocaleString()} KRW</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>주문총액:</span>
+                        <span>${Math.floor(total).toLocaleString()} KRW</span>
+                    </div>
+                `;
+
+          document.getElementById("orderSummary").innerHTML = summary;
+          document.getElementById("orderModal").style.display = "block";
+
+          document.getElementById("news-popup").style.display = "none";
+          document.getElementById("overlay").style.display = "none";
+        };
+        // 수량/가격 입력 시 → 팝업 총액 자동 계산
+        document.getElementById("news-orderAmount").oninput = () => this.calculateNewsOrderTotal();
+        document.getElementById("news-orderPrice").oninput = () => this.calculateNewsOrderTotal();
+
+        // 퍼센트 버튼
+        document.querySelectorAll('#news-trade-form .percentage-btn').forEach(btn => {
+          btn.onclick = () => {
+            const percent = parseInt(btn.dataset.percent);
+            this.setNewsOrderAmount(percent);
+          };
+        });
+
+        // 직접입력 %
+        document.getElementById("news-percentageInput").oninput = (e) => {
+          let val = parseFloat(e.target.value);
+          if (isNaN(val) || val < 0) val = 0;
+          if (val > 100) val = 100;
+          this.setNewsOrderAmount(val);
+        };
+      }
+
+      setNewsOrderAmount(percent) {
+        const currentPrice = this.currentPrices[this.currentMarket];
+        if (!currentPrice || currentPrice === 0) return;
+
+        let orderAmount;
+        if (this.isBuyMode) {
+          const availableKrw = this.portfolio.krw;
+          const orderTotal = (availableKrw * percent / 100);
+          // 🔹 우측 거래창 방식 그대로 적용
+          orderAmount = (orderTotal / currentPrice) - 1e-8;
+        } else {
+          const availableCoin = this.portfolio[this.currentMarket].amount;
+          orderAmount = (availableCoin * percent / 100);
+        }
+
+        // 팝업창 값 갱신
+        document.getElementById("news-orderAmount").value = orderAmount.toFixed(8);
+        this.calculateNewsOrderTotal();
+
+        // 🔹 우측 거래창 값도 동일하게 갱신
+        document.getElementById("orderAmount").value = orderAmount.toFixed(8);
+        this.calculateOrderTotal();
+      }
+
+      calculateNewsOrderTotal() {
+        const amount = parseFloat(document.getElementById("news-orderAmount").value) || 0;
+        const price = parseFloat(document.getElementById("news-orderPrice").value) || this.currentPrices[this.currentMarket];
+        const total = amount * price;
+        document.getElementById("news-orderTotal").value = Math.floor(total);
+      }
+
+      clearOrderForm() {
+        document.getElementById('orderAmount').value = '';
+        document.getElementById('orderPrice').value = '';
+        document.getElementById('orderTotal').value = '';
+        document.getElementById('percentageInput').value = '';
+      }
+
+      showError(message) {
+        const errorElement = document.getElementById('errorMessage');
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+      }
+
+      hideError() {
+        document.getElementById('errorMessage').style.display = 'none';
+      }
+
+      updateDisplay() {
+        this.updateCurrentMarketDisplay();
+        this.updatePortfolioDisplay();
+        this.updateChart();
+      }
+
+      addUserActionToTimeline(news, type, amountKRW) {
+        const box = document.getElementById("news-timeline");
+        const div = document.createElement("div");
+        div.classList.add("user-action");
+
+        let text = "";
+        if (type === "buy") {
+          text = `👉 [사용자] ${Math.floor(amountKRW).toLocaleString()} KRW 매수 실행`;
+          div.style.color = "#d73527";
+        } else if (type === "sell") {
+          text = `👉 [사용자] ${Math.floor(amountKRW).toLocaleString()} KRW 매도 실행`;
+          div.style.color = "#1261c4";
+        } else {
+          text = `👉 [사용자] 유지 선택`;
+          div.style.color = "#aaa";
+        }
+
+        div.innerText = `${news.time} - ${text}`;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.tradingSystem = new HistoricalTradingSystem();
+    });
+  </script>
+</body>
+
+</html>

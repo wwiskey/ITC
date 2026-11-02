@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ITC | 암호화폐 모의 투자</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    :root{
+      color-scheme: dark;
+      --accent:#ffd166;
+      --stroke:#2b2b2b;
+      --glow:255,255,255;
+    }
+
+    /* ===== Global ===== */
+    html,body{ height:90%; }
+    body{
+      margin:0; color:#eaeaea; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.12), transparent 60%),
+        radial-gradient(900px 600px at 50% 120%, rgba(255,255,255,.08), transparent 60%),
+        repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0 2px, rgba(0,0,0,0) 2px 8px),
+        linear-gradient(#151515, #0a0a0a);
+      background-attachment: fixed;
+    }
+    *{ box-sizing:border-box; }
+
+    /* ===== Header ===== */
+    header{
+      position:fixed; inset:12px 12px auto 12px; z-index:10;
+      display:flex; align-items:center; justify-content:space-between;
+      backdrop-filter:saturate(120%) blur(2px);
+    }
+    .brand img{
+      width:120px; height:auto;
+      filter: drop-shadow(0 10px 26px rgba(var(--glow),.22))
+              drop-shadow(0 0 20px rgba(var(--glow),.18));
+    }
+    nav{ display:flex; gap:8px; }
+    .navbtn{
+      display:inline-flex; align-items:center; gap:8px;
+      height:36px; padding:0 12px; border-radius:10px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--stroke); color:#f3f3f3; text-decoration:none; font-weight:700;
+      transition:.22s; box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .navbtn img{ width:18px; height:18px; object-fit:contain; display:block; }
+    .navbtn:hover{
+      border-color:rgba(var(--glow),.32);
+      box-shadow:0 0 12px rgba(var(--glow),.22);
+      transform:translateY(-1px); color:#fff;
+    }
+
+    /* ===== Layout ===== */
+    main{
+      width:min(1200px,92vw);
+      margin:130px auto 48px;
+      display:flex; flex-direction:column; gap:22px;
+    }
+
+    /* ===== Hero / Typewriter ===== */
+    #typewriter{
+      display:flex; flex-direction:column; align-items:center; text-align:center; gap:10px;
+      height:clamp(110px,16vw,140px);
+      justify-content:center;
+    }
+    #line1{
+      font-size:clamp(24px,3.6vw,40px); font-weight:900; letter-spacing:.3px;
+      background:linear-gradient(95deg,
+        rgba(255,255,255,1) 0%,
+        rgba(240,240,240,.85) 18%,
+        rgba(255,255,255,.98) 45%,
+        rgba(210,210,210,.65) 65%,
+        rgba(255,255,255,1) 100%);
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+      filter: drop-shadow(0 12px 36px rgba(var(--glow),.22))
+              drop-shadow(0 0 24px rgba(var(--glow),.20));
+      white-space:nowrap;
+    }
+    #line2{
+      font-size:clamp(14px,2.2vw,19px); color:#cfcfcf; font-weight:500;
+      white-space:nowrap;
+    }
+    .cursor{ display:inline-block; margin-left:2px; animation:caret .9s steps(1) infinite; }
+    .cursor.complete{ animation:blink 1s step-end infinite; }
+    @keyframes caret{50%{opacity:0;}} @keyframes blink{50%{opacity:0;}}
+
+    /* ===== Cards (Grid) ===== */
+    .cards-wrap{
+      position:relative;
+      padding: 8px 60px;
+    }
+    .grid{
+      display:grid; gap:16px; grid-template-columns:repeat(4,minmax(0,1fr));
+      align-items:stretch;
+    }
+    @media (max-width:1100px){ .grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+    @media (max-width:900px){ .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+    @media (max-width:640px){ .grid{ grid-template-columns:1fr; } }
+
+    .card{
+      position:relative;
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01) 40%, rgba(255,255,255,0));
+      border:1px solid var(--stroke);
+      border-radius:16px;
+      box-shadow:0 6px 18px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.05);
+      display:grid; overflow:hidden;
+      grid-template-rows: auto 1fr auto;
+      transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease, filter .28s ease, opacity .28s ease;
+    }
+    .card::after{
+      content:""; position:absolute; inset:auto 0 0 0; height:46px;
+      background:linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,.06));
+      pointer-events:none;
+    }
+    .thumb{
+      aspect-ratio:10/9;
+      background:
+        linear-gradient(170deg, rgba(255,255,255,.14), rgba(255,255,255,0) 60%),
+        linear-gradient(to right, #303030, #121212);
+      display:flex; align-items:center; justify-content:center;
+      color:#fff; font-weight:900; font-size:clamp(18px,2.4vw,26px); letter-spacing:.4px; text-transform:uppercase;
+      text-shadow:0 0 22px rgba(var(--glow),.38), 0 4px 18px rgba(var(--glow),.12);
+      border-bottom:1px solid var(--stroke);
+    }
+    .body{ padding:14px; }
+    .body h3{ margin:0 0 4px; font-weight:800; }
+    .desc{ color:#b0b0b0; font-size:14px; line-height:1.55; }
+    .actions{ display:flex; justify-content:flex-end; padding:0 14px 14px; margin-top:auto;}
+    .btn{
+      background:rgba(255,255,255,.04);
+      border:1px solid var(--stroke); color:#f2f2f2;
+      border-radius:11px; height:40px; padding:0 14px; text-decoration:none; font-weight:800;
+      display:inline-flex; align-items:center; gap:10px; transition:.24s;
+    }
+    .btn:hover{
+      border-color:rgba(var(--glow),.30);
+      box-shadow:0 0 12px rgba(var(--glow),.20), 0 10px 20px rgba(0,0,0,.35);
+      color:#fff; transform:translateY(-1px);
+    }
+
+    /* ===== 강조/잔상 효과 ===== */
+    .card.is-dim{
+      opacity:.35;
+      filter: grayscale(.15) brightness(.65);
+      transition: all 0.4s ease;
+    }
+    .card.is-focus{
+      transform: translateY(-8px) scale(1.04);
+      box-shadow:
+        0 20px 50px rgba(0,0,0,.6), 
+        0 0 30px rgba(var(--glow),.35),
+        0 0 60px rgba(255,255,255,.15);
+      border-color: rgba(var(--glow),.45);
+      opacity:1;
+      filter: brightness(1.25) contrast(1.1);
+      background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03) 40%, rgba(255,255,255,.01));
+      transition: all 0.4s ease;
+    }
+
+    /* ===== 좌우 네비 버튼 (SVG, white border) ===== */
+    .grid-nav{ pointer-events:none; }
+    .arrow{
+      pointer-events:auto;
+      position:absolute; top:50%; transform:translateY(-50%);
+      width:44px; height:44px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid #fff;
+      background:rgba(0,0,0,.55);
+      color:#fff;
+      box-shadow:0 0 14px rgba(255,255,255,.25);
+      transition:.2s;
+      user-select:none; cursor:pointer;
+    }
+    .arrow:hover{
+      background:rgba(0,0,0,.75);
+      box-shadow:0 0 18px rgba(255,255,255,.5);
+      transform:translateY(-50%) scale(1.05);
+    }
+    .arrow:active{ transform:translateY(-50%) scale(0.95); }
+    .arrow.prev{ left:-52px; }
+    .arrow.next{ right:-52px; }
+    .arrow svg{ width:22px; height:22px; }
+
+    @media (max-width: 640px){
+      .arrow.prev{ left:-36px; }
+      .arrow.next{ right:-36px; }
+    }
+
+    /* ===== Tutorial System ===== */
+    .tutorial-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.85);
+      z-index:9998;
+      opacity:0;
+      visibility:hidden;
+      transition: opacity .3s, visibility .3s;
+      pointer-events:none;
+    }
+
+    .tutorial-overlay.active{
+      opacity:1;
+      visibility:visible;
+      pointer-events:auto;
+    }
+
+    .tutorial-spotlight{
+      position:fixed;
+      border:3px solid var(--accent);
+      border-radius:20px;
+      box-shadow:
+        0 0 0 9999px rgba(0,0,0,0.85),
+        0 0 40px rgba(255,209,102,0.5),
+        inset 0 0 20px rgba(255,209,102,0.1);
+      z-index:9999;
+      transition:all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events:none;
+      display:none;
+    }
+
+    .tutorial-mascot{
+      position:fixed;
+      z-index:10001;
+      transition:all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      display:none;
+    }
+
+    .tutorial-mascot.active{
+      display:block;
+    }
+
+    .mascot-img{
+      width:140px;
+      height:140px;
+      object-fit:contain;
+      filter:drop-shadow(0 10px 30px rgba(0,0,0,0.5));
+      animation:float 3s ease-in-out infinite;
+    }
+
+    @keyframes float{
+      0%, 100%{ transform:translateY(0); }
+      50%{ transform:translateY(-10px); }
+    }
+
+    /* ===== TTS Audio Icon ===== */
+    .tts-icon{
+      position:absolute;
+      top:-5px;
+      right:-5px;
+      width:24px;
+      height:24px;
+      background:rgba(255,209,102,0.9);
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition:all 0.2s ease;
+      box-shadow:0 2px 8px rgba(255,209,102,0.3);
+      z-index:1;
+    }
+
+    .tts-icon:hover{
+      background:rgba(255,209,102,1);
+      transform:scale(1.1);
+      box-shadow:0 4px 12px rgba(255,209,102,0.5);
+    }
+
+    .tts-icon.playing{
+      animation:audio-pulse 1s ease-in-out infinite;
+    }
+
+    .tts-icon svg{
+      width:14px;
+      height:14px;
+      fill:#1a1a1a;
+    }
+
+    @keyframes audio-pulse{
+      0%, 100%{ transform:scale(1); }
+      50%{ transform:scale(1.15); }
+    }
+
+    .tutorial-bubble{
+      position:fixed;
+      background:linear-gradient(145deg, rgba(255,255,255,0.98), rgba(245,245,245,0.95));
+      color:#1a1a1a;
+      padding:24px 28px;
+      border-radius:20px;
+      max-width:420px;
+      min-width:320px;
+      box-shadow:
+        0 15px 40px rgba(0,0,0,0.3),
+        0 0 30px rgba(255,209,102,0.2);
+      z-index:10001;
+      opacity:0;
+      transform:translateY(10px);
+      transition:all 0.3s ease 0.2s;
+      display:none;
+    }
+
+    .tutorial-bubble.active{
+      display:block;
+    }
+
+    .tutorial-bubble.show{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    .tutorial-bubble::before{
+      content:'';
+      position:absolute;
+      width:20px;
+      height:20px;
+      background:linear-gradient(135deg, rgba(255,255,255,0.98), rgba(245,245,245,0.95));
+      transform:rotate(45deg);
+    }
+
+    .tutorial-bubble.left::before{
+      right:-10px;
+      top:50%;
+      transform:translateY(-50%) rotate(45deg);
+    }
+
+    .tutorial-bubble.right::before{
+      left:-10px;
+      top:50%;
+      transform:translateY(-50%) rotate(45deg);
+    }
+
+    .tutorial-bubble.top::before{
+      bottom:-10px;
+      left:50%;
+      transform:translateX(-50%) rotate(45deg);
+    }
+
+    .tutorial-bubble.bottom::before{
+      top:-10px;
+      left:50%;
+      transform:translateX(-50%) rotate(45deg);
+    }
+
+    .bubble-title{
+      font-size:18px;
+      font-weight:800;
+      color:#1a1a1a;
+      margin:0 0 8px 0;
+    }
+
+    .bubble-text{
+      font-size:15px;
+      line-height:1.7;
+      color:#333;
+      margin:0 0 20px 0;
+      word-break:keep-all;
+      overflow-wrap:break-word;
+    }
+
+    .tutorial-controls{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+    }
+
+    .tutorial-btn{
+      padding:8px 16px;
+      border-radius:8px;
+      font-weight:600;
+      font-size:14px;
+      border:none;
+      cursor:pointer;
+      transition:all 0.2s ease;
+    }
+
+    .tutorial-btn.skip{
+      background:rgba(0,0,0,0.1);
+      color:#666;
+    }
+
+    .tutorial-btn.skip:hover{
+      background:rgba(0,0,0,0.2);
+    }
+
+    .tutorial-btn.next{
+      background:linear-gradient(135deg, var(--accent), #ffb347);
+      color:#1a1a1a;
+      box-shadow:0 4px 15px rgba(255,209,102,0.3);
+    }
+
+    .tutorial-btn.next:hover{
+      transform:translateY(-1px);
+      box-shadow:0 6px 20px rgba(255,209,102,0.4);
+    }
+
+    .tutorial-btn.finish{
+      background:linear-gradient(135deg, #4CAF50, #45a049);
+      color:white;
+    }
+
+    .tutorial-progress{
+      position:fixed;
+      bottom:30px;
+      left:50%;
+      transform:translateX(-50%);
+      display:none;
+      gap:8px;
+      z-index:10002;
+    }
+
+    .tutorial-progress.active{
+      display:flex;
+    }
+
+    .progress-dot{
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      background:rgba(255,255,255,0.3);
+      transition:all 0.3s ease;
+    }
+
+    .progress-dot.active{
+      background:var(--accent);
+      box-shadow:0 0 10px rgba(255,209,102,0.5);
+      transform:scale(1.2);
+    }
+
+    /* ===== Start Tutorial Button ===== */
+    .help-button{
+      position:fixed;
+      bottom:30px;
+      right:30px;
+      z-index:1000;
+      background:linear-gradient(135deg, rgba(255,209,102,0.9), rgba(255,193,77,0.8));
+      border:1px solid rgba(255,209,102,0.6);
+      border-radius:50px;
+      padding:12px 20px;
+      color:#1a1a1a;
+      font-weight:700;
+      font-size:14px;
+      text-decoration:none;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      box-shadow:0 8px 25px rgba(255,209,102,0.3), 0 0 20px rgba(255,209,102,0.15);
+      transition:all 0.3s ease;
+      backdrop-filter:blur(10px);
+      animation:gentle-pulse 3s ease-in-out infinite;
+      cursor:pointer;
+    }
+
+    .help-button:hover{
+      background:linear-gradient(135deg, rgba(255,209,102,1), rgba(255,193,77,0.95));
+      box-shadow:0 12px 35px rgba(255,209,102,0.4), 0 0 30px rgba(255,209,102,0.25);
+      transform:translateY(-2px) scale(1.05);
+      animation:none;
+    }
+
+    .help-button svg{
+      width:18px;
+      height:18px;
+    }
+
+    @keyframes gentle-pulse{
+      0%, 100%{ transform:scale(1); }
+      50%{ transform:scale(1.02); }
+    }
+
+    @media (max-width: 640px){
+      .help-button{
+        bottom:20px;
+        right:20px;
+        padding:10px 16px;
+        font-size:13px;
+      }
+      
+      .mascot-img{
+        width:100px;
+        height:100px;
+      }
+      
+      .tutorial-bubble{
+        max-width:280px;
+        padding:16px 20px;
+      }
+    }
+
+    /* ===== Footer ===== */
+    footer{
+      display:flex; justify-content:center; margin:16px 0 36px;
+      color:#9a9a9a; font-size:12px; text-align:center; line-height:1.4;
+      padding:0 16px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고" /></a>
+    <nav>
+      <a class="navbtn" href="guide.html"><img src="/images/Document.png" alt="">GUIDE</a>
+      <a class="navbtn" href="mypage.html">👤 MyPage</a>
+    </nav>
+  </header>
+
+  <main>
+    <div id="typewriter">
+      <div id="line1"></div>
+      <div id="line2"></div>
+    </div>
+
+    <section class="cards-wrap">
+      <div class="grid" id="cardGrid">
+        <article class="card" data-link="historical.html" data-card="game">
+          <div class="thumb">Game</div>
+          <div class="body">
+            <h3>과거 데이터 시뮬레이션</h3>
+            <p class="desc">실제 과거 암호화폐 데이터를 기반으로 <strong>게임처럼</strong> 투자 결정을 내리며 연습해보세요.</p>
+          </div>
+          <div class="actions"><a class="btn" href="historical.html">시작하기</a></div>
+        </article>
+
+        <article class="card" data-link="news.html" data-card="news">
+          <div class="thumb">News</div>
+          <div class="body">
+            <h3>뉴스 한눈에 보기</h3>
+            <p class="desc">암호화폐 관련 뉴스를 모아서 빠르게 확인할 수 있습니다.</p>
+          </div>
+          <div class="actions"><a class="btn" href="news.html">들어가기</a></div>
+        </article>
+
+        <article class="card" data-link="crypto.html" data-card="crypto">
+          <div class="thumb">Crypto</div>
+          <div class="body">
+            <h3>암호화폐 백과사전</h3>
+            <p class="desc">대표 코인과 개념들을 정리한 백과사전을 살펴보세요.</p>
+          </div>
+          <div class="actions"><a class="btn" href="crypto.html">살펴보기</a></div>
+        </article>
+
+        <article class="card" data-link="realtime.html" data-card="realtime">
+          <div class="thumb">Realtime</div>
+          <div class="body">
+            <h3>실시간 모의 투자 연습</h3>
+            <p class="desc">BTC·ETH·XRP 종목으로 주문·체결·잔고 UI를 체험하며 트레이딩을 연습하세요.</p>
+          </div>
+          <div class="actions"><a class="btn" href="realtime.html">시작하기</a></div>
+        </article>
+      </div>
+
+      <div class="grid-nav">
+        <button class="arrow prev" aria-label="이전">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/>
+          </svg>
+        </button>
+        <button class="arrow next" aria-label="다음">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/>
+          </svg>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <div class="tutorial-overlay" id="tutorialOverlay"></div>
+  <div class="tutorial-spotlight" id="tutorialSpotlight"></div>
+  
+  <div class="tutorial-mascot" id="tutorialMascot">
+    <img class="mascot-img" id="mascotImg" src="" alt="마스코트">
+    <div class="tts-icon" id="ttsIcon" title="음성으로 듣기">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+      </svg>
+    </div>
+  </div>
+  
+  <div class="tutorial-bubble" id="tutorialBubble">
+    <h3 class="bubble-title" id="bubbleTitle"></h3>
+    <p class="bubble-text" id="bubbleText"></p>
+    <div class="tutorial-controls">
+      <button class="tutorial-btn skip" id="skipBtn">건너뛰기</button>
+      <button class="tutorial-btn next" id="nextBtn">다음</button>
+    </div>
+  </div>
+  
+  <div class="tutorial-progress" id="tutorialProgress"></div>
+
+  <button class="help-button" id="helpButton">
+    <img src="/images/coin_good1.png" alt="튜토리얼 마스코트" style="width:24px; height:24px; border-radius:50%;">
+    처음 오셨나요?
+  </button>
+
+  <footer>
+      본 서비스는 학습과 연습을 목적으로 제공되는 모의투자 시스템입니다.<br>
+      제공되는 데이터와 시뮬레이션 결과는 실제 시장과 다를 수 있으며, 이로 인해 발생하는 모든 손실과 불이익에 대해서 운영자는 책임을 지지 않습니다.<br>
+      본 서비스는 투자 권유가 아니며, 실제 투자를 결정할 때는 이용자 본인의 판단과 책임에 따라야 합니다.
+  </footer>
+
+  <script>
+    // Typewriter
+    (() => {
+      const texts = [
+        { el: "line1", text: "안녕하세요, ITC입니다." },
+        { el: "line2", text: "실시간·과거 데이터 기반 암호화폐 투자 시뮬레이션을 학습하며, 뉴스와 백과사전에서 관련 정보를 확인하세요." }
+      ];
+      function typeWriter({ el, text }, done) {
+        const target = document.getElementById(el);
+        let i = 0;
+        (function type(){
+          target.innerHTML = text.slice(0,i) + '<span class="cursor">|</span>';
+          if(i < text.length){ i++; setTimeout(type, 38); }
+          else { const c = target.querySelector(".cursor"); if(c) c.classList.add("complete"); done && done(); }
+        })();
+      }
+      typeWriter(texts[0], () => setTimeout(() => typeWriter(texts[1]), 320));
+    })();
+
+    // ===== TUTORIAL SYSTEM WITH TTS =====
+    class TutorialSystem {
+      constructor() {
+        this.currentStep = 0;
+        this.isActive = false;
+        this.currentAudio = null;
+        
+        this.elements = {
+          overlay: document.getElementById('tutorialOverlay'),
+          spotlight: document.getElementById('tutorialSpotlight'),
+          mascot: document.getElementById('tutorialMascot'),
+          mascotImg: document.getElementById('mascotImg'),
+          bubble: document.getElementById('tutorialBubble'),
+          bubbleTitle: document.getElementById('bubbleTitle'),
+          bubbleText: document.getElementById('bubbleText'),
+          nextBtn: document.getElementById('nextBtn'),
+          skipBtn: document.getElementById('skipBtn'),
+          progress: document.getElementById('tutorialProgress'),
+          helpButton: document.getElementById('helpButton'),
+          ttsIcon: document.getElementById('ttsIcon')
+        };
+
+        this.steps = [
+          {
+            target: null,
+            mascot: 'coin_good1',
+            title: '안녕하세요! ITC에 오신 걸 환영해요!',
+            text: '저는 여러분의 암호화폐 투자 학습을 도와드릴 코인이에요.\n지금부터 ITC의 주요 기능들을 소개해드릴게요!\n모의투자이니 실제 돈이 들어가지 않는다는 점 잊지 마세요!',
+            position: 'center'
+          },
+          {
+            target: '[data-card="game"]',
+            mascot: 'coin_good1',
+            title: '🎮 과거 데이터 시뮬레이션',
+            text: '실제 과거 암호화폐 데이터로 게임처럼 투자를 연습할 수 있어요.\n초보자분들은 먼저 이 기능으로 전략을 익히는 걸 추천드려요!',
+            position: 'right'
+          },
+          {
+            target: '[data-card="news"]',
+            mascot: 'coin_soso1',
+            title: '📰 암호화폐 뉴스',
+            text: '최신 암호화폐 관련 뉴스를 한눈에 확인할 수 있어요.\n시장 동향을 파악하는데 도움을 줄 거예요.\n다만, 투자 결정은 실제 돈과 상관없이 신중히!',
+            position: 'right'
+          },
+          {
+            target: '[data-card="crypto"]',
+            mascot: 'coin_sad1',
+            title: '📚 암호화폐 백과사전',
+            text: '모르는 용어나 기술 때문에 당황하지 마세요.\n여기서 쉽게 찾아보고 학습할 수 있어요!',
+            position: 'left'
+          },
+          {
+            target: '[data-card="realtime"]',
+            mascot: 'coin_good1',
+            title: '📈 실시간 모의 투자',
+            text: 'BTC, ETH, XRP로 실제와 같은 트레이딩 UI를 체험해보세요.\n실제 시장과 차이가 있을 수 있으니 충분히 연습한 후 도전하세요!',
+            position: 'left'
+          },
+          {
+            target: null,
+            mascot: 'coin_good1',
+            title: '준비되셨나요?',
+            text: 'ITC에서 안전하고 재미있게 암호화폐 투자를 배워보세요!\n마이페이지에서는 실시간 모의 투자 연습을 기반으로 나만의 리포트를 확인할 수 있답니다.\n그럼 즐겁게 배우고, 행운을 빌어요! 🚀',
+            position: 'center'
+          }
+        ];
+
+        this.init();
+      }
+
+      init() {
+        this.elements.helpButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.start();
+        });
+        this.elements.nextBtn.addEventListener('click', () => this.nextStep());
+        this.elements.skipBtn.addEventListener('click', () => this.end());
+        this.elements.ttsIcon.addEventListener('click', () => this.playTTS());
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && this.isActive) this.end();
+        });
+        this.createProgressDots();
+      }
+
+      createProgressDots() {
+        this.elements.progress.innerHTML = '';
+        for (let i = 0; i < this.steps.length; i++) {
+          const dot = document.createElement('div');
+          dot.className = 'progress-dot';
+          this.elements.progress.appendChild(dot);
+        }
+      }
+
+      start() {
+        this.isActive = true;
+        this.currentStep = 0;
+        this.elements.overlay.classList.add('active');
+        this.elements.mascot.classList.add('active');
+        this.elements.progress.classList.add('active');
+        this.showStep();
+      }
+
+      showStep() {
+        const step = this.steps[this.currentStep];
+        const dots = this.elements.progress.querySelectorAll('.progress-dot');
+        dots.forEach((dot, index) => dot.classList.toggle('active', index === this.currentStep));
+
+        this.elements.mascotImg.src = `/images/${step.mascot}.png`;
+        this.elements.bubbleTitle.textContent = step.title;
+        this.elements.bubbleText.innerHTML = step.text.replace(/\n/g, '<br>');
+        
+        const isLastStep = this.currentStep === this.steps.length - 1;
+
+        if (isLastStep) {
+          this.elements.nextBtn.textContent = '시작하기';
+          this.elements.nextBtn.classList.add('finish');
+          this.elements.skipBtn.style.display = 'none';
+        } else {
+          this.elements.nextBtn.textContent = '다음';
+          this.elements.nextBtn.classList.remove('finish');
+          this.elements.skipBtn.style.display = 'inline-block';
+        }
+
+        this.elements.bubble.classList.add('active');
+
+        const targetElement = step.target ? document.querySelector(step.target) : null;
+        if (targetElement) {
+          this.highlightElement(targetElement, step.position);
+        } else {
+          this.showCenter();
+        }
+      }
+
+      highlightElement(element, position) {
+          const rect = element.getBoundingClientRect();
+          const mascotSize = window.innerWidth < 640 ? 100 : 140;
+          const bubbleHeight = this.elements.bubble.offsetHeight;
+          const bubbleWidth = this.elements.bubble.offsetWidth;
+          const gap = 20;
+
+          const mascotTop = rect.top + (rect.height / 2) - (mascotSize / 2);
+          const bubbleTop = mascotTop + (mascotSize / 2) - (bubbleHeight / 2) - 30;
+
+          let mascotLeft, bubbleLeft;
+
+          if (position === 'left') {
+              mascotLeft = rect.left - mascotSize - gap;
+              bubbleLeft = mascotLeft - bubbleWidth - 15;
+          } else {
+              mascotLeft = rect.right + gap;
+              bubbleLeft = mascotLeft + mascotSize + 15;
+          }
+
+          this.elements.overlay.style.background = 'transparent';
+          
+          this.elements.spotlight.style.cssText = `left: ${rect.left - 10}px; top: ${rect.top - 10}px; width: ${rect.width + 20}px; height: ${rect.height + 20}px; display: block;`;
+          this.elements.mascot.style.cssText = `left: ${mascotLeft}px; top: ${mascotTop}px;`;
+          this.elements.bubble.style.cssText = `left: ${bubbleLeft}px; top: ${bubbleTop}px;`;
+          this.elements.bubble.className = `tutorial-bubble active ${position}`;
+
+          document.querySelectorAll('.card').forEach(card => {
+              if (card === element) {
+                  card.classList.add('is-focus');
+                  card.classList.remove('is-dim');
+                  card.style.opacity = '1';
+                  card.style.filter = 'brightness(1.25) contrast(1.1)';
+                  card.style.transform = 'translateY(-8px) scale(1.04)';
+                  card.style.boxShadow = '0 20px 50px rgba(0,0,0,.6), 0 0 30px rgba(255,209,102,.35), 0 0 60px rgba(255,255,255,.15)';
+                  card.style.borderColor = 'rgba(255,209,102,.45)';
+                  card.style.background = 'linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03) 40%, rgba(255,255,255,.01))';
+              } else {
+                  card.classList.add('is-dim');
+                  card.classList.remove('is-focus');
+                  card.style.opacity = '';
+                  card.style.filter = '';
+                  card.style.transform = '';
+                  card.style.boxShadow = '';
+                  card.style.borderColor = '';
+                  card.style.background = '';
+              }
+          });
+
+          requestAnimationFrame(() => this.elements.bubble.classList.add('show'));
+      }      
+
+      showCenter() {
+          this.elements.overlay.style.background = 'rgba(0,0,0,0.85)';
+          
+          const mascotSize = window.innerWidth < 640 ? 100 : 140;
+          const bubbleWidth = this.elements.bubble.offsetWidth;
+          const gap = 30;
+          const totalWidth = mascotSize + bubbleWidth + gap;
+          const mascotLeft = (window.innerWidth / 2) - (totalWidth / 2);
+          const bubbleLeft = mascotLeft + mascotSize + gap;
+
+          this.elements.spotlight.style.display = 'none';
+          this.elements.mascot.style.cssText = `left: ${mascotLeft}px; top: 50%; transform: translateY(-50%);`;
+          this.elements.bubble.style.cssText = `left: ${bubbleLeft}px; top: calc(50% - 30px); transform: translateY(-50%);`;
+          this.elements.bubble.className = 'tutorial-bubble active right';
+          
+          document.querySelectorAll('.card').forEach(card => {
+              card.classList.remove('is-focus', 'is-dim');
+              card.style.opacity = '';
+              card.style.filter = '';
+              card.style.transform = '';
+              card.style.boxShadow = '';
+              card.style.borderColor = '';
+              card.style.background = '';
+          });
+          
+          requestAnimationFrame(() => this.elements.bubble.classList.add('show'));
+      }
+
+      playTTS() {
+        // 이전 오디오가 재생 중이면 정지
+        if (this.currentAudio) {
+          this.currentAudio.pause();
+          this.currentAudio.currentTime = 0;
+          this.elements.ttsIcon.classList.remove('playing');
+        }
+
+        // 현재 단계에 맞는 TTS 파일 재생 (1.mp3 ~ 6.mp3)
+        const audioFile = `/voice/${this.currentStep + 1}.mp3`;
+        this.currentAudio = new Audio(audioFile);
+        
+        this.currentAudio.addEventListener('loadstart', () => {
+          this.elements.ttsIcon.classList.add('playing');
+        });
+
+        this.currentAudio.addEventListener('ended', () => {
+          this.elements.ttsIcon.classList.remove('playing');
+        });
+
+        this.currentAudio.addEventListener('error', (e) => {
+          console.warn(`TTS 파일을 찾을 수 없습니다: ${audioFile}`);
+          this.elements.ttsIcon.classList.remove('playing');
+        });
+
+        this.currentAudio.play().catch(e => {
+          console.warn('오디오 재생에 실패했습니다:', e);
+          this.elements.ttsIcon.classList.remove('playing');
+        });
+      }
+
+      nextStep() {
+        // 다음 단계로 넘어갈 때 현재 재생 중인 오디오 정지
+        if (this.currentAudio) {
+          this.currentAudio.pause();
+          this.currentAudio.currentTime = 0;
+          this.elements.ttsIcon.classList.remove('playing');
+        }
+        
+        this.elements.bubble.classList.remove('show');
+        setTimeout(() => {
+          if (this.currentStep < this.steps.length - 1) {
+            this.currentStep++;
+            this.showStep();
+          } else {
+            this.end();
+          }
+        }, 300);
+      }
+
+      end() {
+        this.isActive = false;
+        
+        // TTS 오디오 정지
+        if (this.currentAudio) {
+          this.currentAudio.pause();
+          this.currentAudio.currentTime = 0;
+          this.elements.ttsIcon.classList.remove('playing');
+        }
+        
+        this.elements.overlay.classList.remove('active');
+        this.elements.spotlight.style.display = 'none';
+        this.elements.bubble.classList.remove('show', 'active');
+        this.elements.mascot.classList.remove('active');
+        this.elements.progress.classList.remove('active');
+        document.querySelectorAll('.card').forEach(card => {
+            card.classList.remove('is-focus', 'is-dim');
+            card.style.filter = '';
+            card.style.boxShadow = '';
+            card.style.background = '';
+            card.style.borderColor = '';
+            card.style.transform = '';
+            const cardElements = card.querySelectorAll('h3, .desc, .btn, .thumb');
+            cardElements.forEach(el => {
+                el.style.backgroundColor = '';
+                el.style.color = '';
+                el.style.borderColor = '';
+                el.style.textShadow = '';
+                el.style.background = '';
+            });
+        });
+        this.elements.mascot.style.cssText = '';
+        localStorage.setItem('itc-tutorial-completed', 'true');
+      }
+    }
+
+    const tutorial = new TutorialSystem();
+
+    // Focus logic for 4-card grid
+    (function(){
+      const grid = document.getElementById('cardGrid');
+      const cards = Array.from(grid.querySelectorAll('.card'));
+      const prevBtn = document.querySelector('.arrow.prev');
+      const nextBtn = document.querySelector('.arrow.next');
+      let idx = 3;
+
+      function applyFocus(){
+        if (tutorial.isActive) return;
+        cards.forEach((c,i) => {
+          c.classList.toggle('is-focus', i === idx);
+          c.classList.toggle('is-dim', i !== idx);
+        });
+      }
+      
+      function move(dir){
+        if (tutorial.isActive) return;
+        idx = (idx + dir + cards.length) % cards.length;
+        applyFocus();
+      }
+
+      applyFocus();
+      prevBtn.addEventListener('click', () => move(-1));
+      nextBtn.addEventListener('click', () => move(1));
+
+      window.addEventListener('keydown', (e) => {
+        if (tutorial.isActive) return;
+        if(e.key === 'ArrowLeft') move(-1);
+        if(e.key === 'ArrowRight') move(1);
+      });
+
+      cards.forEach((card,i) => {
+        card.addEventListener('click', (e) => {
+          if (tutorial.isActive || e.target.closest('.btn')) return;
+          idx = i; applyFocus();
+        });
+        card.addEventListener('mouseenter', () => {
+          if (tutorial.isActive) return;
+          idx = i; applyFocus();
+        });
+        card.addEventListener('touchstart', (e) => {
+          if (tutorial.isActive || card.classList.contains('is-focus')) return;
+          e.preventDefault();
+          idx = i; applyFocus();
+        }, {passive:false});
+      });
+    })();
+  </script>
+</body>
+</html>

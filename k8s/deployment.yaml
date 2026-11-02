@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: itc-deployment
+  namespace: itc
+  labels:
+    app: itc-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: itc-app
+  template:
+    metadata:
+      labels:
+        app: itc-app
+    spec:
+      # 워크로드 아이덴티티를 위해 생성한 서비스 계정을 지정합니다.
+      serviceAccountName: itc-app-sa
+      containers:
+      - name: itc-container
+        image: __imageFullName__
+        ports:
+        - containerPort: 3000
+        envFrom:
+        - secretRef:
+            name: itc-secrets

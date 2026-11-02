@@ -1,0 +1,289 @@
+/* AI Assistant Chat Widget Styles - 개선된 버전 */
+:root {
+    --chat-widget-primary-color: #F2C94C; /* 노란색 계열로 변경 */
+    --chat-widget-background-color: #ffffff;
+    --chat-widget-header-color: #f8f9fa;
+    --chat-widget-text-color: #333;
+    --chat-widget-user-msg-bg: #F2C94C; /* 사용자 말풍선도 톤 맞춤 */
+    --chat-widget-user-msg-color: #292929;
+    --chat-widget-bot-msg-bg: #f1f1f1;
+    --chat-widget-bot-msg-color: #333;
+    --chat-widget-border-radius: 8px;
+    --chat-widget-box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.chat-widget-resizer {
+    position: absolute;
+    top: -5px;
+    left: 0;
+    width: 100%;
+    height: 10px;
+    cursor: ns-resize;
+    z-index: 1;
+}
+
+#ai-chat-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    background-color: var(--chat-widget-primary-color);
+    color: white;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    box-shadow: var(--chat-widget-box-shadow);
+    transition: transform 0.2s ease-in-out;
+    z-index: 1001; /* 튜토리얼 버튼보다 높게 설정 */
+}
+
+#ai-chat-button:hover {
+    transform: scale(1.1);
+}
+
+/* 버튼 내부에 배경 이미지로 코인 채팅 아이콘 적용 (비율 유지) */
+#ai-chat-button {
+    background-image: url('/images/coin-chat.jpeg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain; /* 비율 유지, 찌그러짐 방지 */
+}
+
+#ai-chat-widget {
+    position: fixed;
+    bottom: 160px; /* 100px → 160px로 증가하여 마스코트 위로 올림 */
+    right: 30px;
+    width: 370px;
+    max-width: 90vw;
+    height: 500px;
+    max-height: 60vh; /* 70vh → 60vh로 줄여서 화면 상단과의 여백 확보 */
+    background-color: var(--chat-widget-background-color);
+    border-radius: var(--chat-widget-border-radius);
+    box-shadow: var(--chat-widget-box-shadow);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    display: none;
+    z-index: 999; /* 마스코트보다 낮게 설정 (보통 튜토리얼 시스템은 10000 이상) */
+}
+
+#ai-chat-widget.visible {
+    display: flex;
+}
+
+.chat-widget-header {
+    padding: 15px;
+    background-color: var(--chat-widget-header-color);
+    border-bottom: 1px solid #ddd;
+    font-weight: 600;
+    color: var(--chat-widget-text-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+}
+
+.chat-widget-header .close-btn {
+    cursor: pointer;
+    font-size: 20px;
+    color: #888;
+}
+
+.chat-widget-messages {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.chat-message {
+    padding: 12px 16px;
+    border-radius: 18px;
+    max-width: 85%;
+    word-wrap: break-word;
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+    font-size: 14px;
+    line-height: 1.6; /* 줄간격 증가로 가독성 향상 */
+    letter-spacing: -0.01em; /* 자간 조정 */
+}
+
+.chat-message.user {
+    background-color: var(--chat-widget-user-msg-bg);
+    color: var(--chat-widget-user-msg-color);
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    font-weight: 400;
+}
+
+.chat-message.bot {
+    background-color: var(--chat-widget-bot-msg-bg);
+    color: var(--chat-widget-bot-msg-color);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    white-space: pre-wrap; /* 줄바꿈과 공백 유지 */
+    font-weight: 400;
+}
+
+/* 봇 메시지 내 강조 텍스트 스타일링 */
+.chat-message.bot strong {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* 봇 메시지 내 숫자나 중요 정보 하이라이트 */
+.chat-message.bot em {
+    font-style: normal;
+    background-color: #e3f2fd;
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: #1565c0;
+    font-weight: 500;
+}
+
+.chat-widget-disclaimer {
+    font-size: 11px;
+    color: #888;
+    text-align: center;
+    padding: 8px 15px 0;
+    margin: 0;
+    border-top: 1px solid #ddd;
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+}
+
+.chat-message.loading {
+    align-self: flex-start;
+}
+
+.chat-message.loading span {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #aaa;
+    animation: bounce 1s infinite;
+}
+.chat-message.loading span:nth-child(2) { animation-delay: 0.1s; }
+.chat-message.loading span:nth-child(3) { animation-delay: 0.2s; }
+
+@keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+}
+
+.chat-widget-input {
+    border-top: 1px solid #ddd;
+    padding: 10px;
+    display: flex;
+    align-items: flex-start;
+    background-color: #fafafa; /* 입력창 배경 살짝 변경 */
+}
+
+.chat-widget-input textarea {
+    flex-grow: 1;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    outline: none;
+    resize: none;
+    overflow-y: auto;
+    min-height: 50px;
+    max-height: 250px; /* 5줄(라인 높이) + 패딩을 고려해 충분히 여유롭게 */
+    height: 50px;
+    background-color: #fafafa; /* 다크 모드에서도 입력창은 항상 밝게 */
+    color: #333;
+    caret-color: #333;
+    /* 모던한 폰트 적용 */
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    /* 포커스 시 스타일 개선 */
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.chat-widget-input textarea:focus {
+    border-color: var(--chat-widget-primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.chat-widget-input textarea::placeholder {
+    color: #999;
+    font-weight: 400;
+}
+
+.chat-widget-input button {
+    background-color: var(--chat-widget-primary-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.chat-widget-input button:hover {
+    background-color: #E0B94A;
+    transform: scale(1.05);
+}
+
+.chat-widget-input button:active {
+    transform: scale(0.95);
+}
+
+/* 모던한 스크롤바 스타일 */
+.chat-widget-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-widget-messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.chat-widget-messages::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.chat-widget-messages::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 튜토리얼 활성화 시 챗봇 위젯 숨기기 */
+body.tutorial-active #ai-chat-widget {
+    display: none !important;
+}
+
+body.tutorial-active #ai-chat-button {
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+/* 반응형 개선 */
+@media (max-width: 480px) {
+    #ai-chat-widget {
+        width: 95vw;
+        right: 2.5vw;
+        height: 50vh; /* 60vh → 50vh로 줄여서 모바일에서도 여백 확보 */
+        bottom: 120px; /* 모바일에서도 마스코트와 겹치지 않도록 */
+    }
+    
+    .chat-message {
+        max-width: 90%;
+        font-size: 13px;
+    }
+}

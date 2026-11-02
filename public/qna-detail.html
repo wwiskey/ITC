@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Q&A 상세 | ITC</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    :root{
+      color-scheme: dark;
+      --accent:#ffd166;
+      --stroke:#2b2b2b;
+      --glow:255,255,255;
+
+      --txt:#eaeaea;
+      --border:#3a3a3a;
+      --card-bg:#242424;
+      --muted:#9aa0a6;
+      --pill-bg:#111; --pill-border:#2a2a2a;
+
+      /* 추천 버튼 상태색 (기존 유지) */
+      --upvote:#4d4d4d;
+      --upvote-hover:#868686;
+      --upvote-on:#0f163b;
+      --upvote-on-border:#14534d;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ height:90%; }
+    body{
+      margin:0; color:var(--txt);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.12), transparent 60%),
+        radial-gradient(900px 600px at 50% 120%, rgba(255,255,255,.08), transparent 60%),
+        repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0 2px, rgba(0,0,0,0) 2px 8px),
+        linear-gradient(#151515, #0a0a0a);
+      background-attachment: fixed;
+    }
+
+    /* Header (index와 동일) */
+    header{
+      position:fixed; inset:12px 12px auto 12px; z-index:10;
+      display:flex; align-items:center; justify-content:space-between;
+      backdrop-filter:saturate(120%) blur(2px);
+    }
+    .brand img{
+      width:120px; height:auto;
+      filter: drop-shadow(0 10px 26px rgba(var(--glow),.22))
+              drop-shadow(0 0 20px rgba(var(--glow),.18));
+    }
+    nav{ display:flex; gap:8px; }
+    .navbtn{
+      display:inline-flex; align-items:center; gap:8px;
+      height:36px; padding:0 12px; border-radius:10px;
+      background:rgba(255,255,255,.03);
+      border:1px solid var(--stroke); color:#f3f3f3; text-decoration:none; font-weight:700;
+      transition:.22s; box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .navbtn img{ width:18px; height:18px; }
+    .navbtn:hover{
+      border-color:rgba(var(--glow),.32);
+      box-shadow:0 0 12px rgba(var(--glow),.22);
+      transform:translateY(-1px); color:#fff;
+    }
+
+    /* Layout (index와 동일 폭/마진) */
+    main{
+      width:min(1200px,92vw);
+      margin:130px auto 80px;
+      display:flex; flex-direction:column; gap:18px;
+    }
+
+    /* 상세 카드 */
+    .card{ background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:18px; }
+    h1{ margin:0 0 6px 0; font-size:clamp(20px,4vw,26px); font-weight:800; }
+    .meta{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; font-size:13px; color:var(--muted); }
+    .badge{ display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 8px; border-radius:999px; border:1px solid var(--pill-border); background:var(--pill-bg); font-weight:600; font-size:12px; }
+    .body{ line-height:1.7; white-space:pre-wrap; word-break:break-word; }
+    .divider{ height:1px; background:var(--border); margin:14px 0; }
+
+    /* 추천/조회 */
+    .stats{ display:flex; gap:10px; color:var(--muted); font-size:13px; align-items:center; flex-wrap:wrap; }
+    .pill{ display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 12px; border-radius:999px; border:1px solid var(--border); background:#121212; color:#e8e8e8; }
+    .upvote{ display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 14px; border-radius:999px; border:1px solid var(--border); background:var(--upvote); color:#e8f0ff; font-weight:800; cursor:pointer; }
+    .upvote:hover{ background:var(--upvote-hover); }
+    .upvote[aria-pressed="true"]{ background:var(--upvote-on); border-color:var(--upvote-on-border); }
+    .upvote[disabled]{ opacity:.6; cursor:not-allowed; }
+
+    /* 댓글 */
+    .section-title{ margin:6px 0 4px; font-size:18px; font-weight:800; }
+    .comment{ background:#202020; border:1px solid #303030; border-radius:12px; padding:14px; margin-top:10px; }
+    .comment .who{ font-size:13px; color:var(--muted); margin-bottom:6px; display:flex; gap:8px; align-items:center; }
+    .comment .body{ white-space:pre-wrap; word-break:break-word; line-height:1.7; }
+    .form-grid{ display:grid; gap:10px; margin-top:10px; }
+    textarea, input{ width:100%; border-radius:10px; border:1px solid #555; background:#1a1a1a; color:#e8e8e8; padding:10px 12px; outline:none; }
+    textarea{ min-height:120px; resize:vertical; }
+    .actions{ display:flex; gap:8px; justify-content:flex-end; }
+    .btn{ height:40px; padding:0 14px; border-radius:10px; border:1px solid var(--border); background:#121212; color:#e8e8e8; cursor:pointer; }
+    .hint{ font-size:12px; color:#b5b5b5; }
+    .error{ color:#ffb3b3; font-size:13px; display:none; }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="index.html"><img src="/images/logo.png" alt="ITC 로고"/></a>
+    <nav>
+      <a class="navbtn" href="qna.html">← Q&A</a>
+      <a class="navbtn" href="mypage.html">MyPage</a>
+    </nav>
+  </header>
+
+  <main>
+    <article class="card" id="qWrap">
+      <div class="top">
+        <h1 id="qTitle">제목 로딩중…</h1>
+        <div class="meta" id="qMeta"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="body" id="qBody">내용 로딩중…</div>
+      <div class="divider"></div>
+
+      <div class="stats">
+        <button id="btnUpvote" class="upvote" type="button" aria-pressed="false" aria-label="이 질문 추천하기">
+          추천 <span id="qVotes">0</span>
+        </button>
+        <span class="pill">조회 <strong id="qViews">0</strong></span>
+      </div>
+    </article>
+
+    <section class="card" id="qCommentsSection">
+      <div class="section-title">댓글</div>
+      <div id="qCommentsList"></div>
+      <div class="divider"></div>
+      <div class="form-grid">
+        <textarea id="qCommentBody" placeholder="댓글을 입력하세요"></textarea>
+        <div class="actions">
+          <button class="btn" id="qCommentSubmit" type="button">댓글 등록</button>
+        </div>
+        <div class="hint">* 댓글 작성은 로그인 필요. 비공개 질문은 작성자/관리자만 볼 수 있습니다.</div>
+        <div class="error" id="qComErr"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /* === 기존 qna-detail.html 스크립트 유지: 상세/추천/댓글 === */
+    const $ = (s, el=document)=>el.querySelector(s);
+    const escapeHtml = (s='')=>String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    const fmtDate = iso => { const d = new Date(iso); return isNaN(d)?'':d.toLocaleString('ko-KR',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}); };
+
+    const params = new URLSearchParams(location.search);
+    const qid = Number(params.get('id') || '');
+    if(!qid){ location.replace('qna.html'); }
+
+    async function fetchJSON(url, opt){
+      const res = await fetch(url, opt);
+      let out=null; try{ out = await res.json(); }catch{}
+      if(!res.ok){ throw new Error(out?.error || (res.status+' error')); }
+      return out ?? {};
+    }
+
+    let CATS=null;
+    async function loadCats(){
+      if(CATS) return CATS;
+      try{ const res = await fetch('/api/qna/categories'); CATS = res.ok? await res.json():[]; }
+      catch{ CATS=[]; }
+      return CATS;
+    }
+    async function categoryLabel(id){
+      const cats = await loadCats();
+      return (cats.find(c=>String(c.id)===String(id))||{}).label || String(id);
+    }
+
+    async function loadQuestion(){
+      const q = await fetchJSON(`/api/qna/questions/${qid}`);
+      $('#qTitle').textContent = q.title;
+      $('#qBody').textContent  = q.body || '';
+      const visBadge = `<span class="badge">${q.visibility==='private'?'비공개':'공개'}</span>`;
+      const cat = await categoryLabel(q.category_id);
+      $('#qMeta').innerHTML = `
+        <span class="badge">${escapeHtml(cat)}</span>
+        ${visBadge}
+        <span>작성자 ${escapeHtml(q.author_name || q.author_email || 'user')}</span>
+        <span>· ${fmtDate(q.created_at)}</span>
+      `;
+      $('#qVotes').textContent = Number(q.upvotes||0);
+      $('#qViews').textContent = Number(q.views||0).toLocaleString('ko-KR');
+    }
+
+    async function loadVoteState(){
+      try{
+        const s = await fetchJSON(`/api/qna/questions/${qid}/upvote-state`);
+        const voted = !!s?.voted;
+        $('#btnUpvote').setAttribute('aria-pressed', String(voted));
+      }catch{ /* 비로그인/엔드포인트 부재 허용 */ }
+    }
+
+    async function upvote(btn){
+      if(btn.getAttribute('aria-pressed') === 'true') return;
+      btn.disabled = true;
+      try{
+        const out = await fetchJSON(`/api/qna/questions/${qid}/upvote`, { method:'POST' });
+        const newVotes = Number(out?.upvotes ?? out?.count ?? 0);
+        if(!Number.isNaN(newVotes)) $('#qVotes').textContent = newVotes;
+        btn.setAttribute('aria-pressed','true');
+      }catch(e){
+        alert(e.message || '추천 실패');
+      }finally{ btn.disabled = false; }
+    }
+
+    async function loadComments(question_id){
+      const list = await fetchJSON(`/api/qna/comments?question_id=${question_id}`);
+      const wrap = document.getElementById('qCommentsList');
+      wrap.innerHTML = '';
+      if(!list.length){ wrap.innerHTML = `<div class="hint">댓글이 없습니다.</div>`; return; }
+      const byParent = new Map();
+      for(const c of list){
+        const key = c.parent_comment_id || 0;
+        if(!byParent.has(key)) byParent.set(key, []);
+        byParent.get(key).push(c);
+      }
+      const render = (pid, depth=0)=>{
+        (byParent.get(pid)||[]).forEach(c=>{
+          const el = document.createElement('div');
+          el.className='comment';
+          el.style.marginLeft = (depth*16)+'px';
+          el.innerHTML = `
+            <div class="who">작성자 ${escapeHtml(c.author_name || c.author_email || 'user')} · ${fmtDate(c.created_at)}${c.parent_comment_id ? ' · 대댓글' : ''}</div>
+            <div class="body">${escapeHtml(c.body||'')}</div>
+          `;
+          wrap.appendChild(el);
+          render(c.id, depth+1);
+        });
+      };
+      render(0, 0);
+    }
+    async function submitComment(question_id, parent_comment_id, body){
+      const res = await fetch('/api/qna/comments', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ question_id, parent_comment_id: parent_comment_id || null, body })
+      });
+      let out=null; try{ out=await res.json(); }catch{}
+      if(!res.ok) throw new Error(out?.error || '댓글 등록 실패');
+      return out;
+    }
+
+    document.addEventListener('click', async (e)=>{
+      if(e.target.id==='btnUpvote') await upvote(e.target);
+      if(e.target.id==='qCommentSubmit'){
+        const body = $('#qCommentBody').value.trim();
+        const err = $('#qComErr');
+        if(!body){ err.style.display='block'; err.textContent='댓글 내용을 입력하세요.'; return; }
+        err.style.display='none';
+        try{ await submitComment(qid, null, body); $('#qCommentBody').value=''; await loadComments(qid); }
+        catch(err2){ err.style.display='block'; err.textContent = err2.message || '댓글 등록 실패'; }
+      }
+    });
+
+    (async function init(){
+      try{
+        await loadQuestion();
+        await loadVoteState();
+        await loadComments(qid);
+      }catch(err){
+        alert(err.message || '상세 조회 실패');
+        if(String(err.message||'').includes('forbidden') || String(err.message||'').includes('(403)')){
+          location.replace('qna.html');
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

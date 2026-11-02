@@ -1,0 +1,926 @@
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>과거 데이터 시뮬레이션 | ITC</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    :root {
+      color-scheme: dark;
+      --accent: #ffd166;
+      --stroke: #2b2b2b;
+      --glow: 255, 255, 255;
+    }
+
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+      display: none;
+    }
+
+    html,
+    body {
+      -ms-overflow-style: none;
+      /* IE */
+      scrollbar-width: none;
+      /* Firefox */
+    }
+
+    body {
+      margin: 0;
+      color: #eaeaea;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(255, 255, 255, .12), transparent 60%),
+        radial-gradient(900px 600px at 50% 120%, rgba(255, 255, 255, .08), transparent 60%),
+        repeating-linear-gradient(to bottom, rgba(255, 255, 255, .03) 0 2px, rgba(0, 0, 0, 0) 2px 8px),
+        linear-gradient(#151515, #0a0a0a);
+      background-attachment: fixed;
+    }
+
+    /* ===== Header ===== */
+    header {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand img {
+      width: 120px;
+      height: auto;
+      filter: drop-shadow(0 10px 26px rgba(var(--glow), .22)) drop-shadow(0 0 20px rgba(var(--glow), .18));
+    }
+
+    .navbtn {
+      display: inline-flex;
+      align-items: center;
+      height: 36px;
+      padding: 0 14px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid var(--stroke);
+      color: #f3f3f3;
+      font-weight: 700;
+      text-decoration: none;
+      transition: .22s;
+    }
+
+    .navbtn:hover {
+      border-color: rgba(var(--glow), .32);
+      box-shadow: 0 0 12px rgba(var(--glow), .22);
+      transform: translateY(-1px);
+      color: #fff;
+    }
+
+    /* ===== Layout ===== */
+    main {
+      width: min(1100px, 92vw);
+      margin: 130px auto 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    /* ===== Typewriter 영역 ===== */
+    #typewriter {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 10px;
+      height: clamp(110px, 16vw, 140px);
+      justify-content: center;
+    }
+
+    #line1 {
+      font-size: clamp(24px, 3.6vw, 40px);
+      font-weight: 900;
+      letter-spacing: .3px;
+      background: linear-gradient(95deg,
+          rgba(255, 255, 255, 1) 0%,
+          rgba(240, 240, 240, .85) 20%,
+          rgba(255, 255, 255, .95) 50%,
+          rgba(210, 210, 210, .65) 70%,
+          rgba(255, 255, 255, 1) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 12px 36px rgba(var(--glow), .22)) drop-shadow(0 0 24px rgba(var(--glow), .20));
+      white-space: nowrap;
+    }
+
+    #line2 {
+      font-size: clamp(14px, 2.2vw, 19px);
+      color: #cfcfcf;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* ===== Cards ===== */
+    .grid {
+      display: grid;
+      gap: 50px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 240px));
+      justify-content: center;
+    }
+
+    .card {
+      max-width: 240px;
+      position: relative;
+      background: linear-gradient(180deg, rgba(255, 255, 255, .03), rgba(255, 255, 255, .01) 40%, rgba(255, 255, 255, 0));
+      border: 1px solid var(--stroke);
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, .30), inset 0 1px 0 rgba(255, 255, 255, .05);
+      display: grid;
+      overflow: hidden;
+      grid-template-rows: auto 1fr auto;
+      transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease, filter .28s ease, opacity .28s ease;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 46px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .06));
+      pointer-events: none;
+    }
+
+    .card.is-dim {
+      opacity: .55;
+      filter: grayscale(.08) brightness(.88);
+    }
+
+    .card.is-focus {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 16px 34px rgba(0, 0, 0, .45), 0 0 18px rgba(var(--glow), .18);
+      border-color: rgba(var(--glow), .28);
+      opacity: 1;
+      filter: none;
+    }
+
+    .cards-wrap {
+      position: relative;
+      padding: 8px 60px;
+    }
+
+    .grid-nav {
+      pointer-events: none;
+    }
+
+    .arrow {
+      pointer-events: auto;
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #fff;
+      background: rgba(0, 0, 0, .55);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(255, 255, 255, .25);
+      transition: .2s;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    .arrow:hover {
+      background: rgba(0, 0, 0, .75);
+      box-shadow: 0 0 18px rgba(255, 255, 255, .5);
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    .arrow:active {
+      transform: translateY(-50%) scale(0.95);
+    }
+
+    .arrow.prev {
+      left: -52px;
+    }
+
+    .arrow.next {
+      right: -52px;
+    }
+
+    .arrow svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    @media (max-width:640px) {
+      .arrow.prev {
+        left: -36px;
+      }
+
+      .arrow.next {
+        right: -36px;
+      }
+    }
+
+    .thumb {
+      aspect-ratio: 10/9;
+      background:
+        linear-gradient(170deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, 0) 60%),
+        linear-gradient(to right, #303030, #121212);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: clamp(18px, 2.4vw, 26px);
+      letter-spacing: .4px;
+      text-transform: uppercase;
+      text-shadow: 0 0 22px rgba(var(--glow), .38), 0 4px 18px rgba(var(--glow), .12);
+      border-bottom: 1px solid var(--stroke);
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .body {
+      padding: 14px;
+    }
+
+    .kicker {
+      font-size: 12px;
+      color: var(--accent);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .card h3 {
+      margin: 8px 0 6px;
+      font-size: clamp(16px, 2.2vw, 20px);
+      font-weight: 800;
+    }
+
+    .desc {
+      color: #b0b0b0;
+      font-size: 14px;
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0 14px 14px;
+      margin-top: auto;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--stroke);
+      color: #f2f2f2;
+      border-radius: 11px;
+      height: 40px;
+      padding: 0 14px;
+      text-decoration: none;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: .24s;
+    }
+
+    .btn:hover {
+      border-color: rgba(var(--glow), .30);
+      box-shadow: 0 0 12px rgba(var(--glow), .20), 0 10px 20px rgba(0, 0, 0, .35);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    /* ===== Footer ===== */
+    footer {
+      margin: 20px 0 36px;
+      text-align: center;
+      color: #9a9a9a;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    /* ===== Tutorial System (추가) ===== */
+    .tutorial-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .85);
+      z-index: 9998;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .3s, visibility .3s;
+      pointer-events: none;
+    }
+
+    .tutorial-overlay.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .tutorial-spotlight {
+      position: fixed;
+      border: 3px solid var(--accent);
+      border-radius: 20px;
+      z-index: 9999;
+      display: none;
+      box-shadow:
+        0 0 0 9999px rgba(0, 0, 0, 0.85),
+        0 0 40px rgba(255, 209, 102, 0.5),
+        inset 0 0 20px rgba(255, 209, 102, 0.1);
+    }
+
+    .tutorial-mascot {
+      position: fixed;
+      z-index: 10001;
+      display: none;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tutorial-mascot.active {
+      display: block;
+    }
+
+    .mascot-img {
+      width: 140px;
+      height: 140px;
+      object-fit: contain;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    /* 말풍선 + 꼬리 (index 동일 규칙) */
+    .tutorial-bubble {
+      position: fixed;
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(245, 245, 245, 0.95));
+      color: #1a1a1a;
+      padding: 24px 28px;
+      border-radius: 20px;
+      max-width: 420px;
+      min-width: 320px;
+      box-shadow:
+        0 15px 40px rgba(0, 0, 0, 0.3),
+        0 0 30px rgba(255, 209, 102, 0.2);
+      z-index: 10001;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease 0.2s;
+      display: none;
+    }
+
+    .tutorial-bubble.active {
+      display: block;
+    }
+
+    .tutorial-bubble.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ★ 꼬리 */
+    .tutorial-bubble::before {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(245, 245, 245, .95));
+      transform: rotate(45deg);
+    }
+
+    .tutorial-bubble.left::before {
+      right: -10px;
+      top: 50%;
+      transform: translateY(-50%) rotate(45deg);
+    }
+
+    .tutorial-bubble.right::before {
+      left: -10px;
+      top: 50%;
+      transform: translateY(-50%) rotate(45deg);
+    }
+
+    .tutorial-bubble.top::before {
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    .tutorial-bubble.bottom::before {
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    .bubble-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0 0 8px;
+    }
+
+    .bubble-text {
+      font-size: 15px;
+      line-height: 1.7;
+      color: #333;
+      margin: 0 0 20px;
+    }
+
+    .tutorial-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .tutorial-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .tutorial-btn.skip {
+      background: rgba(0, 0, 0, .1);
+      color: #666;
+    }
+
+    .tutorial-btn.next {
+      background: linear-gradient(135deg, var(--accent), #ffb347);
+      color: #1a1a1a;
+    }
+
+    .tutorial-btn.finish {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+    }
+
+    .tutorial-progress {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      gap: 8px;
+      z-index: 10002;
+    }
+
+    .tutorial-progress.active {
+      display: flex;
+    }
+
+    .progress-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .3);
+    }
+
+    .progress-dot.active {
+      background: var(--accent);
+      transform: scale(1.2);
+    }
+
+    .help-button {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 1000;
+      background: linear-gradient(135deg, rgba(255, 209, 102, 0.9), rgba(255, 193, 77, 0.8));
+      border: 1px solid rgba(255, 209, 102, 0.6);
+      border-radius: 50px;
+      padding: 12px 20px;
+      color: #1a1a1a;
+      font-weight: 700;
+      font-size: 14px;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 25px rgba(255, 209, 102, 0.3), 0 0 20px rgba(255, 209, 102, 0.15);
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      animation: gentle-pulse 3s ease-in-out infinite;
+      cursor: pointer;
+    }
+
+    .help-button:hover {
+      background: linear-gradient(135deg, rgba(255, 209, 102, 1), rgba(255, 193, 77, 0.95));
+      box-shadow: 0 12px 35px rgba(255, 209, 102, 0.4), 0 0 30px rgba(255, 209, 102, 0.25);
+      transform: translateY(-2px) scale(1.05);
+      animation: none;
+    }
+
+    @keyframes gentle-pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.02);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <a class="brand" href="index.html"><img src="images/logo.png" alt="ITC 로고" /></a>
+    <a class="navbtn" href="index.html">← Back</a>
+  </header>
+
+  <main>
+    <!-- Hero / Typewriter -->
+    <div id="typewriter">
+      <div id="line1">시뮬레이션</div>
+      <div id="line2">과거의 실제 암호화폐 데이터로 3가지 핵심 시나리오를 체험합니다. 이후 실제 흐름을 따라가며 결과를 확인하세요.</div>
+    </div>
+
+    <!-- 카드 Grid -->
+    <section class="cards-wrap">
+      <div class="grid" id="cardGrid">
+        <article class="card">
+          <div class="thumb"><img src="images/scenario1.png" alt="폭락장 시나리오" /></div>
+          <div class="body">
+            <div class="kicker">폭락장</div>
+            <h3>급락 & 패닉셀 대응</h3>
+            <p class="desc">가격이 급락하며 뉴스에 민감하게 반응하는 폭락장에서 손절/리스크 관리와 뉴스 대응을 학습합니다.</p>
+          </div>
+          <div class="actions"><a class="btn" href="scenarios/scenario1.html">시작하기</a></div>
+        </article>
+
+        <article class="card">
+          <div class="thumb"><img src="images/scenario2.png" alt="상승장 시나리오" /></div>
+          <div class="body">
+            <div class="kicker">상승장</div>
+            <h3>급등 & FOMO 상황</h3>
+            <p class="desc">긍정적인 뉴스와 투자 심리로 급등하는 시장에서 익절 전략과 조정 대비 방법을 연습합니다.</p>
+          </div>
+          <div class="actions"><a class="btn" href="scenarios/scenario2.html">시작하기</a></div>
+        </article>
+
+        <article class="card">
+          <div class="thumb"><img src="images/scenario3.png" alt="유지장 시나리오" /></div>
+          <div class="body">
+            <div class="kicker">유지장</div>
+            <h3>횡보 & 거래량 감소</h3>
+            <p class="desc">거래량이 줄고 관망세가 이어지는 횡보장에서 단기 매매와 변동성 예측을 학습합니다.</p>
+          </div>
+          <div class="actions"><a class="btn" href="scenarios/scenario3.html">시작하기</a></div>
+        </article>
+      </div>
+
+      <div class="grid-nav">
+        <button class="arrow prev" aria-label="이전">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z" />
+          </svg>
+        </button>
+        <button class="arrow next" aria-label="다음">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" />
+          </svg>
+        </button>
+      </div>
+    </section>
+  </main>
+  <!-- Tutorial Elements 추가 -->
+  <div class="tutorial-overlay" id="tutorialOverlay"></div>
+  <div class="tutorial-spotlight" id="tutorialSpotlight"></div>
+  <div class="tutorial-mascot" id="tutorialMascot">
+    <img class="mascot-img" id="mascotImg" src="" alt="마스코트">
+  </div>
+  <div class="tutorial-bubble" id="tutorialBubble">
+    <h3 class="bubble-title" id="bubbleTitle"></h3>
+    <p class="bubble-text" id="bubbleText"></p>
+    <div class="tutorial-controls">
+      <button class="tutorial-btn skip" id="skipBtn">건너뛰기</button>
+      <button class="tutorial-btn next" id="nextBtn">다음</button>
+    </div>
+  </div>
+  <div class="tutorial-progress" id="tutorialProgress"></div>
+  <button class="help-button" id="helpButton">
+    <img src="/images/coin_good1.png" alt="튜토리얼 마스코트" style="width:24px;height:24px;border-radius:50%;">
+    시뮬레이션 가이드
+  </button>
+  <footer>
+    본 서비스는 학습과 연습을 목적으로 제공되는 모의투자 시스템입니다.<br>
+    제공되는 데이터와 시뮬레이션 결과는 실제 시장과 다를 수 있으며, 이로 인해 발생하는 모든 손실과 불이익에 대해서 운영자는 책임을 지지 않습니다.<br>
+    본 서비스는 투자 권유가 아니며, 실제 투자를 결정할 때는 이용자 본인의 판단과 책임에 따라야 합니다.
+  </footer>
+
+  <script>
+    class TutorialSystem {
+      constructor() {
+        this.currentStep = 0;
+        this.isActive = false;
+        this.elements = {
+          overlay: document.getElementById('tutorialOverlay'),
+          spotlight: document.getElementById('tutorialSpotlight'),
+          mascot: document.getElementById('tutorialMascot'),
+          mascotImg: document.getElementById('mascotImg'),
+          bubble: document.getElementById('tutorialBubble'),
+          bubbleTitle: document.getElementById('bubbleTitle'),
+          bubbleText: document.getElementById('bubbleText'),
+          nextBtn: document.getElementById('nextBtn'),
+          skipBtn: document.getElementById('skipBtn'),
+          progress: document.getElementById('tutorialProgress'),
+          helpButton: document.getElementById('helpButton')
+        };
+        this.steps = [
+          {
+            target: null,
+            mascot: 'coin_good1',
+            title: '과거 데이터 시뮬레이션',
+            text: '과거 실제 암호화폐 데이터를 바탕으로 세 가지 주요 시나리오를\n 직접 체험할 수 있어요. 시장의 급락, 급등, 횡보까지\n다양한 상황에서 어떻게 대응할지 연습해봅시다!',
+            position: 'center'
+          },
+          {
+            target: '.card:nth-child(1)',
+            mascot: 'coin_sad1',
+            title: '📉 폭락장 시나리오',
+            text: '가격이 갑자기 급락하고 투자자들이 패닉셀을 하는 상황!\n이때 필요한 건 침착한 손절 전략과 리스크 관리예요.\n뉴스가 투자 심리에 어떤 영향을 주는지도 함께 배워봐요.',
+            position: 'right'
+          },
+          {
+            target: '.card:nth-child(2)',
+            mascot: 'coin_good1',
+            title: '💰 상승장 시나리오',
+            text: '호재 뉴스와 투자 심리가 결합해 가격이 급등하는 상황!\n익절 타이밍을 잡는 법과 FOMO(놓칠까 두려움)에\n 휘둘리지 않는 방법을 훈련할 수 있어요.',
+            position: 'right'
+          },
+          {
+            target: '.card:nth-child(3)',
+            mascot: 'coin_soso1',
+            title: '💤 횡보장 시나리오',
+            text: '가격은 오르지도 내리지도 않고 거래량은 점점 줄어드는\n지루한 시장. 이럴 땐 단기 매매 전략과 변동성 예측 능력이\n 중요해요. 시장을 관망하며 적절한 기회를 잡아보세요.',
+            position: 'left'
+          },
+          {
+            target: null,
+            mascot: 'coin_good1',
+            title: '이제 시작해볼까요?',
+            text: '세 가지 시나리오 중 원하는 걸 선택해서 직접 체험해 보세요!\n실제 시장과는 차이가 있을 수 있지만, 안전하게 전략을\n 연습할 수 있는 좋은 기회예요. 그럼 즐겁게 학습해봅시다! ✨',
+            position: 'center'
+          }
+        ];
+        this.init();
+      }
+      init() {
+        this.elements.helpButton.addEventListener('click', () => this.start());
+        this.elements.nextBtn.addEventListener('click', () => this.nextStep());
+        this.elements.skipBtn.addEventListener('click', () => this.end());
+        this.createProgressDots();
+      }
+      createProgressDots() { this.elements.progress.innerHTML = ''; for (let i = 0; i < this.steps.length; i++) { const d = document.createElement('div'); d.className = 'progress-dot'; this.elements.progress.appendChild(d); } }
+      start() { this.isActive = true; this.currentStep = 0; this.elements.overlay.classList.add('active'); this.elements.mascot.classList.add('active'); this.elements.progress.classList.add('active'); this.showStep(); }
+      showStep() {
+        const step = this.steps[this.currentStep];
+        const dots = this.elements.progress.querySelectorAll('.progress-dot');
+        dots.forEach((dot, i) => dot.classList.toggle('active', i === this.currentStep));
+
+        this.elements.mascotImg.src = `/images/${step.mascot}.png`;
+        this.elements.bubbleTitle.textContent = step.title;
+        this.elements.bubbleText.innerHTML = step.text.replace(/\n/g, '<br>');
+
+        // ★ 마지막 스텝이면 버튼을 "시작하기"로 변경
+        const isLastStep = this.currentStep === this.steps.length - 1;
+        if (isLastStep) {
+          this.elements.nextBtn.textContent = '시작하기';
+          this.elements.nextBtn.classList.add('finish');
+          this.elements.skipBtn.style.display = 'none';
+        } else {
+          this.elements.nextBtn.textContent = '다음';
+          this.elements.nextBtn.classList.remove('finish');
+          this.elements.skipBtn.style.display = 'inline-block';
+        }
+
+        this.elements.bubble.classList.add('active');
+
+        if (step.target) {
+          const targetEl = document.querySelector(step.target);
+          if (!targetEl) { this.showCenter(); return; }
+
+          // ★ 카드 강조: 설명 대상 카드는 is-focus, 다른 카드들은 is-dim
+          const cards = document.querySelectorAll('.card');
+          cards.forEach(card => {
+            if (card === targetEl) {
+              card.classList.add('is-focus');
+              card.classList.remove('is-dim');
+            } else {
+              card.classList.remove('is-focus');
+              card.classList.add('is-dim');
+            }
+          });
+
+          const rect = targetEl.getBoundingClientRect();
+          const scrollY = window.scrollY || document.documentElement.scrollTop;
+          const scrollX = window.scrollX || document.documentElement.scrollLeft;
+
+          // spotlight + 오버레이
+          this.elements.spotlight.style.display = 'block';
+          this.elements.spotlight.style.top = (rect.top + scrollY - 15) + 'px';
+          this.elements.spotlight.style.left = (rect.left + scrollX - 5) + 'px';
+          this.elements.spotlight.style.width = (rect.width + 5) + 'px';
+          this.elements.spotlight.style.height = (rect.height + 10) + 'px';
+          this.elements.overlay.style.background = 'transparent';
+
+          // 치수 계산
+          const bubble = this.elements.bubble;
+          const mascot = this.elements.mascot;
+          bubble.style.visibility = 'hidden'; bubble.style.display = 'block';
+          mascot.style.visibility = 'hidden'; mascot.style.display = 'block';
+
+          const bubbleRect = bubble.getBoundingClientRect();
+          const mascotRect = this.elements.mascotImg.getBoundingClientRect();
+          const bubbleW = bubbleRect.width || 420;
+          const bubbleH = bubbleRect.height || 160;
+          const mascotW = mascotRect.width || 140;
+          const mascotH = mascotRect.height || 140;
+
+          const vw = document.documentElement.clientWidth;
+          const vh = document.documentElement.clientHeight;
+          const GUTTER = 24;
+          const MIN_PAD = 16;
+
+          // 좌/우 배치 보정 + 꼬리 방향 지정
+          let side = step.position;
+          if (side === 'right' && rect.right + GUTTER + bubbleW > scrollX + vw - MIN_PAD) side = 'left';
+          if (side === 'left' && rect.left - GUTTER - bubbleW < scrollX + MIN_PAD) side = 'right';
+
+          // 1. 마스코트 위치 (카드 옆)
+          const mascotTop = rect.top + scrollY + (rect.height / 2) - (mascotH / 2);
+          let mascotLeft;
+          if (side === 'right') mascotLeft = rect.right + scrollX + GUTTER;
+          else if (side === 'left') mascotLeft = rect.left + scrollX - mascotW - GUTTER;
+          else mascotLeft = rect.left + scrollX + rect.width / 2 - mascotW / 2;
+
+          mascot.style.top = Math.min(Math.max(mascotTop, scrollY + MIN_PAD), scrollY + vh - mascotH - MIN_PAD) + 'px';
+          mascot.style.left = Math.min(Math.max(mascotLeft, scrollX + MIN_PAD), scrollX + vw - mascotW - MIN_PAD) + 'px';
+          mascot.style.visibility = '';
+
+          // 2. 버블 위치 (마스코트 옆으로 붙임)
+          let bubbleTop = mascotTop + (mascotH / 2) - (bubbleH / 2);
+          let bubbleLeft;
+          if (side === 'right') bubbleLeft = mascotLeft + mascotW + 20;
+          else if (side === 'left') bubbleLeft = mascotLeft - bubbleW - 20;
+          else {
+            bubbleTop = mascotTop + mascotH + 20;
+            bubbleLeft = mascotLeft + (mascotW / 2) - (bubbleW / 2);
+          }
+
+          bubble.style.top = bubbleTop + 'px';
+          bubble.style.left = bubbleLeft + 'px';
+          bubble.style.visibility = '';
+
+          // ★ 말풍선 꼬리가 마스코트를 향하게
+          bubble.className = `tutorial-bubble active ${(side === 'left' || side === 'right') ? side : 'top'}`;
+          requestAnimationFrame(() => bubble.classList.add('show'));
+          mascot.style.visibility = '';
+        } else {
+          this.elements.spotlight.style.display = 'none';   // ★ spotlight 숨김
+          this.elements.overlay.style.background = 'rgba(0,0,0,0.85)'; // ★ 배경 다시 검게
+          this.showCenter();
+        }
+      }
+
+      // 가운데 배치(인트로/아웃트로)
+      showCenter() {
+        const bubble = this.elements.bubble;
+        const mascot = this.elements.mascot;
+
+        this.elements.spotlight.style.display = 'none';
+        this.elements.overlay.style.background = 'rgba(0,0,0,0.85)';
+
+        // 가운데 배치 + 꼬리는 왼쪽 기준
+        bubble.className = 'tutorial-bubble active left';
+
+        const mascotSize = window.innerWidth < 640 ? 100 : 140;
+        const gap = 30;
+
+        bubble.style.display = 'block';
+        const bubbleW = bubble.offsetWidth || 360;
+
+        const totalW = mascotSize + bubbleW + gap;
+        // 버블이 왼쪽, 마스코트가 오른쪽
+        const bubbleLeft = (window.innerWidth / 2) - (totalW / 2);
+        const mascotLeft = bubbleLeft + bubbleW + gap;
+
+        mascot.style.top = '50%';
+        mascot.style.left = `${mascotLeft}px`;
+        mascot.style.transform = 'translateY(-50%)';
+
+        bubble.style.top = 'calc(50% - 30px)';
+        bubble.style.left = `${bubbleLeft}px`;
+        bubble.style.transform = 'translateY(-50%)';
+
+
+        requestAnimationFrame(() => bubble.classList.add('show'));
+      }
+
+      nextStep() {
+        this.elements.bubble.classList.remove('show');
+        setTimeout(() => {
+          if (this.currentStep < this.steps.length - 1) {
+            this.currentStep++;
+
+            // ★ 마지막 스텝 들어가기 직전에 배경을 검게 초기화
+            if (this.currentStep === this.steps.length - 1) {
+              this.elements.overlay.style.background = 'rgba(0,0,0,0.85)';
+              this.elements.spotlight.style.display = 'none';
+            }
+
+            this.showStep();
+          } else {
+            this.end();
+          }
+        }, 300);
+      }
+      end() {
+        this.isActive = false;
+        this.elements.overlay.classList.remove('active');
+        this.elements.spotlight.style.display = 'none';
+        this.elements.bubble.classList.remove('active', 'show');
+        this.elements.mascot.classList.remove('active');
+        this.elements.progress.classList.remove('active');
+        this.elements.mascot.style.cssText = '';   // ★ 마스코트 위치 초기화
+      }
+    }
+    const tutorial = new TutorialSystem();
+    // 기존 카드 focus 로직 (튜토리얼 중엔 비활성)
+    (function () {
+      const grid = document.getElementById('cardGrid');
+      const cards = Array.from(grid.querySelectorAll('.card'));
+      const prevBtn = document.querySelector('.arrow.prev');
+      const nextBtn = document.querySelector('.arrow.next');
+      let idx = 1;
+
+      function applyFocus() {
+        if (tutorial.isActive) return;
+        cards.forEach((c, i) => {
+          c.classList.toggle('is-focus', i === idx);
+          c.classList.toggle('is-dim', i !== idx);
+        });
+      }
+
+      function move(dir) {
+        if (tutorial.isActive) return;
+        idx = (idx + dir + cards.length) % cards.length;
+        applyFocus();
+      }
+
+      applyFocus();
+      prevBtn.addEventListener('click', () => move(-1));
+      nextBtn.addEventListener('click', () => move(1));
+
+      window.addEventListener('keydown', (e) => {
+        if (tutorial.isActive) return;
+        if (e.key === 'ArrowLeft') move(-1);
+        if (e.key === 'ArrowRight') move(1);
+      });
+
+      cards.forEach((card, i) => {
+        card.addEventListener('click', (e) => {
+          if (tutorial.isActive || e.target.closest('.btn')) return;
+          idx = i; applyFocus();
+        });
+        card.addEventListener('mouseenter', () => {
+          if (tutorial.isActive) return;
+          idx = i; applyFocus();
+        });
+        card.addEventListener('touchstart', (e) => {
+          if (tutorial.isActive || card.classList.contains('is-focus')) return;
+          e.preventDefault();
+          idx = i; applyFocus();
+        }, { passive: false });
+      });
+    })();
+  </script>
+</body>
+
+</html>
