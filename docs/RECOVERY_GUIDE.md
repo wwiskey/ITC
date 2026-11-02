@@ -16,7 +16,7 @@
 | 뉴스 | 수집·감정 분류·중복 제거 Python 코드와 조회 API | Naver API 설정, AI 배포, 뉴스 DB, 수집 실행환경 |
 | AI 도우미 | 시장·리포트 대화 UI와 서버 프록시 | 호환되는 LLM API, 모델, 새 인증정보 |
 | 확인 메일 | SMTP 전송·확인 링크 생성 코드 | 메일 전송 서비스와 새 서비스 기본 URL |
-| 배포 | Dockerfile, Kubernetes·Skaffold·Azure DevOps 예시 | 새 호스팅·레지스트리·서비스 연결·인증서·시크릿 |
+| 배포 | src/Dockerfile, Kubernetes·Skaffold·Azure DevOps 예시 | 새 호스팅·레지스트리·서비스 연결·인증서·시크릿 |
 | 운영 분석 | 프로젝트 소개에 기록된 분석 흐름 | Azure SQL·Fabric·Lakehouse·Power BI 모델·보고서·갱신 작업 재구축 |
 
 **이 저장소에 없는 것:** DB 덤프·완전한 초기화 SQL·가격 데이터 seed·Keycloak realm export·Python `requirements.txt`/`host.json`·Fabric/Power BI 전체 배포 구성. Docker Compose 구성도 없습니다.
@@ -28,7 +28,7 @@
 저장소 루트에서 다음을 실행합니다. Python 3가 필요합니다.
 
 ```bash
-python3 -m http.server 8080 --bind 127.0.0.1 --directory public
+python3 -m http.server 8080 --bind 127.0.0.1 --directory src/public
 ```
 
 브라우저에서 확인할 화면:
@@ -41,7 +41,7 @@ python3 -m http.server 8080 --bind 127.0.0.1 --directory public
 
 이 방법은 **화면 구조와 학습 콘텐츠를 살펴보는 용도**입니다. Express·로그인·DB·WebSocket은 실행되지 않으므로 매매, 개인 리포트, 뉴스 조회, AI 대화는 동작하지 않습니다. 일부 차트 라이브러리는 외부 CDN을 사용하며, 시나리오 선택 화면을 볼 수 있어도 시뮬레이션 실행에는 가격 API가 필요합니다.
 
-기존 README의 화면 캡처 역시 외부 리소스를 연결하지 않은 정적 화면입니다.
+기존 README의 화면 캡처 역시 외부 리소스를 연결하지 않은 정적 화면입니다. 코드 위치와 실행 폴더는 [소스 코드 안내](CODE_GUIDE.md)를 참고하세요.
 
 ## 3. 목적에 맞는 재사용 경로
 
@@ -60,23 +60,23 @@ python3 -m http.server 8080 --bind 127.0.0.1 --directory public
 ### 단계 1 · 재현 가능한 개발환경 만들기
 
 - 원본을 보존하고 재구축 작업용 브랜치를 만듭니다.
-- 원본 `Dockerfile`의 Node.js 20 기준을 참고하되, 재개 시점의 유지보수 버전과 패키지 호환성을 검토합니다.
-- `package-lock.json`을 기준으로 의존성을 설치하고 DB·인증·뉴스·AI·메일을 설정 없이 한꺼번에 시작하는 구조를 분리합니다.
+- 원본 `src/Dockerfile`의 Node.js 20 기준을 참고하되, 재개 시점의 유지보수 버전과 패키지 호환성을 검토합니다.
+- Node 명령은 `src/`에서 실행하며(`cd src`), `src/package-lock.json`을 기준으로 의존성을 설치하고 DB·인증·뉴스·AI·메일을 설정 없이 한꺼번에 시작하는 구조를 분리합니다.
 - 원래 서버는 시작 시 사용자 동기화·탈퇴 처리·외부 시세 연결을 수행하므로, 테스트 전 자동 작업의 실행 조건부터 정리합니다.
 
 **완료 기준:** 없는 서비스가 어떤 기능을 제한하는지 명확하고, 선택한 테스트 기능만 기동할 수 있습니다.
 
 ### 단계 2 · DB 스키마와 테스트 데이터 재작성
 
-[`services/database.js`](../services/database.js)와 서버 모듈의 SQL을 바탕으로 마이그레이션·seed를 새로 작성합니다. 아래는 코드에서 확인한 대표 테이블이며, 완전한 DDL이 아닙니다.
+[`src/services/database.js`](../src/services/database.js)와 서버 모듈의 SQL을 바탕으로 마이그레이션·seed를 새로 작성합니다. 아래는 코드에서 확인한 대표 테이블이며, 완전한 DDL이 아닙니다.
 
 | 용도 | 대표 테이블·데이터 | 참고 코드 |
 | :--- | :--- | :--- |
-| 사용자·탈퇴 | `users`, `withdrawal_reasons` | `services/database.js` |
-| 주문·체결 | `pending_orders`, `transactions` | `services/database.js`, `trading/services/` |
-| 질문·댓글·추천 | `categories`, `questions`, `comments`, `question_upvotes` | `public/js/qna.js` |
-| 시나리오 가격 | `crypto_60m_KRW_BTC`, `ETH_daily`, `btc_daily_0601`, `xrp_daily_0601` | `public/js/scenario.js` |
-| 수집 뉴스 | `crypto_news` | `azure_function_app.py`, `public/js/news.js` |
+| 사용자·탈퇴 | `users`, `withdrawal_reasons` | `src/services/database.js` |
+| 주문·체결 | `pending_orders`, `transactions` | `src/services/database.js`, `src/trading/services/` |
+| 질문·댓글·추천 | `categories`, `questions`, `comments`, `question_upvotes` | `src/public/js/qna.js` |
+| 시나리오 가격 | `crypto_60m_KRW_BTC`, `ETH_daily`, `btc_daily_0601`, `xrp_daily_0601` | `src/public/js/scenario.js` |
+| 수집 뉴스 | `crypto_news` | `src/azure_function_app.py`, `src/public/js/news.js` |
 
 쿼리만으로 컬럼 타입·길이·NULL 허용·기본값·고유키·외래키·기존 데이터를 모두 확정할 수 없습니다. 특히 금액·수량 정밀도, 중복 주문/체결 방지, 사용자 식별자 연결은 별도로 설계·검증해야 합니다. 테이블만 빈 상태로 생성해도 기존 기능이 모두 작동하는 것은 아닙니다.
 
@@ -90,7 +90,7 @@ python3 -m http.server 8080 --bind 127.0.0.1 --directory public
 - 사용자 조회·삭제 등 코드가 호출하는 Admin API에 필요한 권한을 맞추고, 프로필의 `age`·`gender`·`city` 매핑을 확인합니다.
 - Q&A 관리자 기능은 토큰의 `realm_access.roles`에 `admin`을 기대합니다. Admin API 서비스 계정 권한과 별도로 앱 관리자 역할·이메일 claim·사용자 속성 mapper를 검증합니다.
 - 기존 MySQL 코드에는 `keycloakPool`이 만들어지지만 실제 사용자 동기화는 Admin API를 사용합니다. 원래 인증 DB를 직접 복원해야 한다고 가정하지 말고 불필요한 연결부터 정리합니다.
-- [`services/database.js`](../services/database.js)의 사용자 조회 실패가 빈 목록으로 처리되고, 동기화 시 기존 사용자가 비활성화될 수 있는 경로를 수정한 뒤 실제 데이터에 연결합니다.
+- [`src/services/database.js`](../src/services/database.js)의 사용자 조회 실패가 빈 목록으로 처리되고, 동기화 시 기존 사용자가 비활성화될 수 있는 경로를 수정한 뒤 실제 데이터에 연결합니다.
 - 새 사용자 UUID와 앱 DB를 연결하고, 자신 계정의 주문·취소·잔액만 접근할 수 있는지 확인합니다.
 
 **완료 기준:** 테스트 계정으로 로그인 → 모의 주문 → 체결/취소 → 보유자산 → 리포트까지 이어지고, 재시작 후에도 데이터가 보존됩니다. 인증 장애 시 사용자 상태가 잘못 바뀌지 않아야 합니다.
@@ -110,7 +110,7 @@ python3 -m http.server 8080 --bind 127.0.0.1 --directory public
 
 - 로컬 핵심 기능 검증 후 호스팅을 선택합니다. Dockerfile은 웹 서버만 포함하며 DB·Keycloak·Functions를 함께 생성하지 않습니다.
 - Azure 예시를 재사용한다면 ACR·AKS·Key Vault·서비스 연결·네임스페이스·도메인·TLS와 시크릿 주입을 새로 구성합니다. `YOUR_*` 값 교체만으로 충분하지 않습니다.
-- 파이프라인에 현재 `.env.example`의 항목이 모두 전달되는지도 점검합니다. `SESSION_SECRET`, `LLM_API_ENDPOINT`, `PUBLIC_BASE_URL`과 기능별 DB 이름 등은 추가 매핑이 필요할 수 있습니다.
+- 파이프라인에 현재 `src/.env.example`의 항목이 모두 전달되는지도 점검합니다. `SESSION_SECRET`, `LLM_API_ENDPOINT`, `PUBLIC_BASE_URL`과 기능별 DB 이름 등은 추가 매핑이 필요할 수 있습니다.
 - Fabric·Power BI 분석은 별도 작업입니다. 원본 모델·보고서 백업을 먼저 찾고, 없으면 새 테스트 데이터로 테이블·관계·지표·갱신 일정을 다시 만듭니다. 새 조직 ID나 보고서 링크를 공개 코드에 넣지 않습니다.
 
 **완료 기준:** 새 환경에서 상태 확인·접근 제어·로그·백업·장애 처리를 검증하고, 분석이 필요하면 새 보고서의 적재·집계·갱신까지 확인합니다. 현재 `/api/health`의 응답만으로 전체 복구를 판단하면 안 됩니다. 해당 API는 메인 DB 연결 상태를 별도로 반환하면서 `status: "ok"`를 표시할 수 있고, 인증·거래·뉴스·AI를 모두 검사하지는 않습니다.

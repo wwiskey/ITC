@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="public/images/logo.png" alt="ITC — Investment Training Crypto" width="320" />
+<img src="src/public/images/logo.png" alt="ITC — Investment Training Crypto" width="320" />
 
 # ITC · Investment Training Crypto
 
@@ -11,7 +11,7 @@
 
 **2025.08–09 · 6인 팀 프로젝트 · PM & Data Engineer**
 
-[서비스 화면](#서비스-화면) · [주요 기능](#주요-기능) · [시스템 구성](#시스템-구성) · [담당 역할](#담당-역할) · [현재 상태·재사용](#현재-상태와-재사용)
+[시연 영상](#서비스-화면) · [주요 기능](#주요-기능) · [담당 역할](#담당-역할) · [소스 코드](src/) · [재구축 가이드](docs/RECOVERY_GUIDE.md)
 
 </div>
 
@@ -108,7 +108,7 @@ flowchart LR
     NewsDB --> App
 ```
 
-뉴스 감정 분석과 대화형 AI 도우미는 각각 별도 파이프라인과 API 설정을 사용합니다. 웹 서버의 진입점은 **`server.js`**입니다.
+뉴스 감정 분석과 대화형 AI 도우미는 각각 별도 파이프라인과 API 설정을 사용합니다. 웹 서버의 진입점은 [`src/server.js`](src/server.js)입니다.
 
 ### 기술 스택
 
@@ -135,41 +135,14 @@ flowchart LR
 
 웹 서비스·거래 엔진·인증·AI·인프라는 팀원들과 함께 통합한 공동 산출물입니다. 위 운영 분석 내용은 프로젝트 수행 기록을 기준으로 정리했으며, **Fabric·Power BI의 전체 구성은 이 저장소에 포함되어 있지 않습니다.**
 
-## 저장소 둘러보기
+## 코드와 문서
 
-```text
-.
-├── server.js                    # 웹 서버 · 인증 · API 통합
-├── public/
-│   ├── index.html               # 홈 · 온보딩
-│   ├── realtime.html            # 실시간 모의투자
-│   ├── historical.html          # 과거 시나리오 선택
-│   ├── scenarios/               # 시나리오별 학습 화면
-│   ├── crypto.html              # 암호화폐 백과사전
-│   ├── news.html                # 뉴스 탐색
-│   ├── report.html              # 개인 투자 리포트
-│   ├── mypage.html              # 사용자 정보 · 자산
-│   ├── qna.html                 # 질문과 답변
-│   ├── js/                     # 브라우저 코드 + 서버 등록 모듈
-│   └── css/ · images/ · voice/  # 스타일 · 이미지 · 음성 리소스
-├── services/                    # DB · 인증 · 이메일 · 자산 서비스
-├── trading/                     # 주문 처리 · 매칭 · WebSocket
-├── azure_function_app.py        # 뉴스 수집 · 감정 분석 · 적재
-├── Dockerfile                   # Node.js 20 컨테이너
-├── k8s/                         # Kubernetes 매니페스트
-├── azure-pipelines.yml          # Azure DevOps 배포 예시
-└── docs/                        # 배포 안내 · 화면 이미지
-```
-
-<details>
-<summary><strong>코드를 읽을 때 참고할 점</strong></summary>
-
-- `public/js/`에는 브라우저 코드 외에 `server.js`에서 불러오는 뉴스·리포트·Q&A·시나리오·실시간 서버 모듈도 들어 있습니다.
-- 주문·체결 흐름은 [`trading/services/`](trading/services/)와 [`trading/managers/`](trading/managers/)에서 확인할 수 있습니다.
-- [`trading/js/app.js`](trading/js/app.js)는 별도 진입 구현이며 `npm start`의 실행 경로에는 포함되지 않습니다.
-- 루트 [`config.js`](config.js)는 Azure Key Vault 연동 모듈입니다. 기본 `server.js`에서 직접 불러오지는 않습니다.
-
-</details>
+| 위치 | 내용 |
+| :--- | :--- |
+| [소스 코드](src/) | 웹 화면·서버·거래 엔진·뉴스 수집·배포 예시 |
+| [코드 안내](docs/CODE_GUIDE.md) | 폴더 구조와 주요 코드 진입점 |
+| [재구축 가이드](docs/RECOVERY_GUIDE.md) | 삭제된 리소스, 준비할 데이터와 복구 순서 |
+| [배포 예시](docs/AZURE_DEPLOYMENT.md) | 새 Azure 환경 구성 시 참고할 설정 |
 
 ## 현재 상태와 재사용
 
@@ -187,7 +160,7 @@ flowchart LR
 저장소 루트에서 Python 3로 실행합니다.
 
 ```bash
-python3 -m http.server 8080 --bind 127.0.0.1 --directory public
+python3 -m http.server 8080 --bind 127.0.0.1 --directory src/public
 ```
 
 [홈](http://127.0.0.1:8080/index.html) · [시나리오 선택](http://127.0.0.1:8080/historical.html) · [백과사전](http://127.0.0.1:8080/crypto.html)

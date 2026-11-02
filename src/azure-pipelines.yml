@@ -9,7 +9,7 @@ variables:
   azureContainerRegistry: 'YOUR_REGISTRY.azurecr.io'
   keyVaultName: 'YOUR_KEY_VAULT'
   imageRepository: 'itc-app'
-  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  dockerfilePath: '$(Build.SourcesDirectory)/src/Dockerfile'
   tag: '$(Build.BuildId)'
   imageFullName: '$(azureContainerRegistry)/$(imageRepository):$(tag)'
   k8sNamespace: 'itc'
@@ -31,13 +31,14 @@ stages:
         command: buildAndPush
         repository: $(imageRepository)
         dockerfile: $(dockerfilePath)
+        buildContext: $(Build.SourcesDirectory)/src
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: '$(tag)'
 
     - task: PublishPipelineArtifact@1
       displayName: 'Publish Kubernetes manifests'
       inputs:
-        targetPath: '$(Build.SourcesDirectory)/k8s'
+        targetPath: '$(Build.SourcesDirectory)/src/k8s'
         artifact: 'manifests'
 
 - stage: Deploy
