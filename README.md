@@ -34,9 +34,9 @@
 
 ### 과거 실행 영상 · 약 2분 27초
 
-[![ITC 실행 시연 — 실시간 모의투자와 AI 도우미](docs/images/demo-poster.png)](https://github.com/wwiskey/ITC/releases/tag/demo-archive-2026-11-02)
+https://github.com/user-attachments/assets/10cf0ff7-8f36-4eec-8a77-fc38f0d12f35
 
-[**▶ 실행 영상 아카이브 열기**](https://github.com/wwiskey/ITC/releases/tag/demo-archive-2026-11-02) · [MP4 다운로드](https://github.com/wwiskey/ITC/releases/download/demo-archive-2026-11-02/itc-demo.mp4)
+[영상 보관본](https://github.com/wwiskey/ITC/releases/tag/demo-archive-2026-11-02)
 
 <sub>서비스가 동작하던 당시의 기록입니다. 현재 운영 상태를 보여주는 영상은 아니며, 공개용 사본에서는 브라우저 주소창·개인 이메일 표시 구간·원본 메타데이터를 제거했습니다.</sub>
 
